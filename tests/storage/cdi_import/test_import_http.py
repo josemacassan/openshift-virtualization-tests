@@ -636,7 +636,7 @@ def test_disk_falloc(internal_http_configmap, dv_from_http_import):
             {
                 "dv_name": "cnv-3362",
                 "source": HTTP,
-                "image": f"{Images.Rhel.DIR}/{Images.Rhel.RHEL8_2_IMG}",
+                "image": py_config["latest_rhel_os_dict"]["image_path"],
                 "dv_size": "25Gi",
                 "access_modes": DataVolume.AccessMode.RWX,
                 "wait": False,

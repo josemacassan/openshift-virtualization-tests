@@ -32,6 +32,7 @@ from timeout_sampler import TimeoutSampler
 
 import tests.storage.utils as storage_utils
 from tests.storage.constants import HPP_STORAGE_CLASSES
+from tests.storage.golden_image.test_golden_image import LATEST_RHEL_IMAGE
 from utilities.constants import (
     CDI_UPLOAD,
     CDI_UPLOAD_TMP_PVC,
@@ -364,7 +365,7 @@ def test_hpp_specify_node_immediate(
         source="http",
         dv_name="cnv-3228",
         namespace=namespace.name,
-        url=f"{get_test_artifact_server_url()}{Images.Rhel.RHEL8_0_IMG}",
+        url=f"{get_test_artifact_server_url()}{LATEST_RHEL_IMAGE}",
         content_type=DataVolume.ContentType.KUBEVIRT,
         size="35Gi",
         storage_class=[*storage_class_matrix_hpp_matrix__module__][0],
