@@ -68,8 +68,6 @@ VOLUME_BINDING_MODE = "volumeBindingMode"
 
 pytestmark = pytest.mark.usefixtures("skip_test_if_no_hpp_sc")
 
-LATEST_RHEL_IMAGE = RHEL_LATEST["image_path"]
-
 
 def skipped_hco_resources():
     hpp_operator_service = f"{HOSTPATH_PROVISIONER_OPERATOR}-service"
@@ -367,7 +365,7 @@ def test_hpp_specify_node_immediate(
         source="http",
         dv_name="cnv-3228",
         namespace=namespace.name,
-        url=f"{get_test_artifact_server_url()}{LATEST_RHEL_IMAGE}",
+        url=f"{get_test_artifact_server_url()}{RHEL_LATEST['image_path']}",
         content_type=DataVolume.ContentType.KUBEVIRT,
         size="35Gi",
         storage_class=[*storage_class_matrix_hpp_matrix__module__][0],
