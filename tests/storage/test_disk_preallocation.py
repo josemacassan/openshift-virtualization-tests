@@ -10,8 +10,8 @@ import pytest
 from ocp_resources.cdi import CDI
 from ocp_resources.resource import NamespacedResource
 from timeout_sampler import TimeoutExpiredError, TimeoutSampler
-from pytest_testconfig import config as py_config
 
+from tests.os_params import RHEL_LATEST
 from utilities.constants import TIMEOUT_2MIN, Images
 from utilities.hco import (
     ResourceEditorValidateHCOReconcile,
@@ -80,7 +80,7 @@ def cdi_preallocation_enabled(hyperconverged_resource_scope_module, cdi_config):
         pytest.param(
             {
                 "dv_name": "cnv-5512",
-                "image": py_config["latest_rhel_os_dict"]["image_path"],
+                "image": RHEL_LATEST["image_path"],
                 "dv_size": Images.Rhel.DEFAULT_DV_SIZE,
                 "preallocation": True,
             },

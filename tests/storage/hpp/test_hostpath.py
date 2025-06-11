@@ -31,8 +31,8 @@ from pytest_testconfig import config as py_config
 from timeout_sampler import TimeoutSampler
 
 import tests.storage.utils as storage_utils
+from tests.os_params import RHEL_LATEST
 from tests.storage.constants import HPP_STORAGE_CLASSES
-from tests.storage.golden_image.test_golden_image import LATEST_RHEL_IMAGE
 from utilities.constants import (
     CDI_UPLOAD,
     CDI_UPLOAD_TMP_PVC,
@@ -67,6 +67,8 @@ HOSTPATH_PROVISIONER_ADMIN = "hostpath-provisioner-admin"
 VOLUME_BINDING_MODE = "volumeBindingMode"
 
 pytestmark = pytest.mark.usefixtures("skip_test_if_no_hpp_sc")
+
+LATEST_RHEL_IMAGE = RHEL_LATEST["image_path"]
 
 
 def skipped_hco_resources():
