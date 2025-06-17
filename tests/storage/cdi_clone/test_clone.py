@@ -21,7 +21,7 @@ from utilities.constants import (
     TIMEOUT_1MIN,
     TIMEOUT_10MIN,
     TIMEOUT_40MIN,
-    Images,
+    Images, OS_FLAVOR_FEDORA,
 )
 from utilities.storage import (
     check_disk_count_in_vm,
@@ -114,8 +114,8 @@ def test_successful_clone_of_large_image(
         pytest.param(
             {
                 "dv_name": "dv-source",
-                "image": f"{Images.Cirros.DIR}/{Images.Cirros.QCOW2_IMG}",
-                "dv_size": Images.Cirros.DEFAULT_DV_SIZE,
+                "image": f"{Images.Fedora.DIR}/{Images.Fedora.QCOW2_IMG}",
+                "dv_size": Images.Fedora.DEFAULT_DV_SIZE,
             },
             marks=(
                 pytest.mark.polarion("CNV-2148"),
@@ -140,7 +140,7 @@ def test_successful_vm_restart_with_cloned_dv(
         storage_class=data_volume_multi_storage_scope_function.storage_class,
     ) as cdv:
         cdv.wait_for_dv_success(timeout=TIMEOUT_10MIN)
-        with create_vm_from_dv(dv=cdv) as vm_dv:
+        with create_vm_from_dv(dv=cdv, vm_name="fedora-vm", os_flavor=OS_FLAVOR_FEDORA, memory_guest=Images.Fedora.DEFAULT_MEMORY_SIZE) as vm_dv:
             restart_vm_wait_for_running_vm(vm=vm_dv, wait_for_interfaces=False)
             check_disk_count_in_vm(vm=vm_dv)
 
@@ -197,8 +197,8 @@ def test_successful_vm_from_cloned_dv_windows(
         pytest.param(
             {
                 "dv_name": "dv-source",
-                "image": f"{Images.Cirros.DIR}/{Images.Cirros.QCOW2_IMG}",
-                "dv_size": Images.Cirros.DEFAULT_DV_SIZE,
+                "image": f"{Images.Fedora.DIR}/{Images.Fedora.QCOW2_IMG}",
+                "dv_size": Images.Fedora.DEFAULT_DV_SIZE,
             },
             marks=(pytest.mark.polarion("CNV-4035")),
         )
@@ -236,9 +236,9 @@ def test_disk_image_after_clone(
     [
         pytest.param(
             {
-                "dv_name": "dv-source-cirros",
-                "image": f"{Images.Cirros.DIR}/{Images.Cirros.QCOW2_IMG}",
-                "dv_size": Images.Cirros.DEFAULT_DV_SIZE,
+                "dv_name": "dv-source-fedora",
+                "image": f"{Images.Fedora.DIR}/{Images.Fedora.QCOW2_IMG}",
+                "dv_size": Images.Fedora.DEFAULT_DV_SIZE,
             },
             marks=(pytest.mark.polarion("CNV-3545"), pytest.mark.gating()),
         ),
