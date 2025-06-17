@@ -40,21 +40,24 @@ class Images:
         DEFAULT_DV_SIZE = "1Gi"
         DEFAULT_MEMORY_SIZE = "64M"
 
-
     class Rhel:
         RHEL7_8_IMG = "rhel-78.qcow2"
         RHEL7_9_IMG = "rhel-79.qcow2"
         RHEL8_0_IMG = "rhel-8.qcow2"
+        RHEL8_2_EFI_IMG = "rhel-82-efi.qcow2"
         RHEL8_8_IMG = "rhel-88.qcow2"
         RHEL8_9_IMG = "rhel-89.qcow2"
         RHEL8_10_IMG = "rhel-810.qcow2"
         RHEL9_3_IMG = "rhel-93.qcow2"
         RHEL9_4_IMG = "rhel-94.qcow2"
-        RHEL9_5_ARM64_IMG = "rhel-95-aarch64.qcow2"
-        RHEL9_6_IMG = "rhel-96.qcow2"
+        RHEL9_5_IMG = "rhel-95.qcow2"
         RHEL9_6_ARM64_IMG = "rhel-96-aarch64.qcow2"
         RHEL8_REGISTRY_GUEST_IMG = "registry.redhat.io/rhel8/rhel-guest-image"
         RHEL9_REGISTRY_GUEST_IMG = "registry.redhat.io/rhel9/rhel-guest-image"
+        RHEL10_REGISTRY_GUEST_IMG = "registry.redhat.io/rhel10/rhel-guest-image"
+        DIR = f"{BASE_IMAGES_DIR}/rhel-images"
+        DEFAULT_DV_SIZE = "20Gi"
+        DEFAULT_MEMORY_SIZE = "1.5Gi"
 
     class Windows:
         WIN10_IMG = "win_10_uefi.qcow2"
