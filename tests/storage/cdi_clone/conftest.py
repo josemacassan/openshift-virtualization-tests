@@ -1,7 +1,7 @@
 import pytest
 from ocp_resources.datavolume import DataVolume
 
-from tests.storage.utils import create_cirros_dv
+from tests.storage.utils import create_cirros_dv, create_fedora_dv
 from utilities.storage import data_volume
 
 
@@ -26,6 +26,32 @@ def cirros_dv_with_block_volume_mode(
     yield from create_cirros_dv(
         namespace=namespace.name,
         name="cirros-block",
+        storage_class=storage_class_with_block_volume_mode,
+        volume_mode=DataVolume.VolumeMode.BLOCK,
+    )
+
+
+@pytest.fixture(scope="module")
+def fedora_dv_with_filesystem_volume_mode(
+    namespace,
+    storage_class_with_filesystem_volume_mode,
+):
+    yield from create_fedora_dv(
+        namespace=namespace.name,
+        name="fedora-fs",
+        storage_class=storage_class_with_filesystem_volume_mode,
+        volume_mode=DataVolume.VolumeMode.FILE,
+    )
+
+
+@pytest.fixture(scope="module")
+def fedora_dv_with_block_volume_mode(
+    namespace,
+    storage_class_with_block_volume_mode,
+):
+    yield from create_fedora_dv(
+        namespace=namespace.name,
+        name="fedora-block",
         storage_class=storage_class_with_block_volume_mode,
         volume_mode=DataVolume.VolumeMode.BLOCK,
     )
