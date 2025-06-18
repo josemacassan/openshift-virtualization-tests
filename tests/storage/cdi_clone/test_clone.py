@@ -16,11 +16,12 @@ from tests.storage.utils import (
     create_windows_vm_validate_guest_agent_info,
 )
 from utilities.constants import (
+    OS_FLAVOR_FEDORA,
     OS_FLAVOR_WINDOWS,
     TIMEOUT_1MIN,
     TIMEOUT_10MIN,
     TIMEOUT_40MIN,
-    Images, OS_FLAVOR_FEDORA,
+    Images,
 )
 from utilities.storage import (
     check_disk_count_in_vm,
@@ -139,7 +140,9 @@ def test_successful_vm_restart_with_cloned_dv(
         storage_class=data_volume_multi_storage_scope_function.storage_class,
     ) as cdv:
         cdv.wait_for_dv_success(timeout=TIMEOUT_10MIN)
-        with create_vm_from_dv(dv=cdv, vm_name="fedora-vm", os_flavor=OS_FLAVOR_FEDORA, memory_requests=Images.Fedora.DEFAULT_MEMORY_SIZE) as vm_dv:
+        with create_vm_from_dv(
+            dv=cdv, vm_name="fedora-vm", os_flavor=OS_FLAVOR_FEDORA, memory_requests=Images.Fedora.DEFAULT_MEMORY_SIZE
+        ) as vm_dv:
             restart_vm_wait_for_running_vm(vm=vm_dv, wait_for_interfaces=False)
             check_disk_count_in_vm(vm=vm_dv)
 
@@ -268,7 +271,12 @@ def test_successful_snapshot_clone(
     ) as cdv:
         cdv.wait_for_dv_success()
         if OS_FLAVOR_WINDOWS not in data_volume_snapshot_capable_storage_scope_function.url.split("/")[-1]:
-            with create_vm_from_dv(dv=cdv, vm_name="fedora-vm", os_flavor=OS_FLAVOR_FEDORA, memory_requests=Images.Fedora.DEFAULT_MEMORY_SIZE) as vm_dv:
+            with create_vm_from_dv(
+                dv=cdv,
+                vm_name="fedora-vm",
+                os_flavor=OS_FLAVOR_FEDORA,
+                memory_requests=Images.Fedora.DEFAULT_MEMORY_SIZE,
+            ) as vm_dv:
                 check_disk_count_in_vm(vm=vm_dv)
         pvc = cdv.pvc
         assert_use_populator(
