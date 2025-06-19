@@ -7,7 +7,7 @@ import os
 import pytest
 from ocp_resources.datavolume import DataVolume
 
-from tests.os_params import WINDOWS_11, WINDOWS_11_TEMPLATE_LABELS
+from tests.os_params import FEDORA_LATEST, WINDOWS_11, WINDOWS_11_TEMPLATE_LABELS
 from tests.storage.utils import (
     assert_pvc_snapshot_clone_annotation,
     assert_use_populator,
@@ -53,7 +53,7 @@ def create_vm_from_clone_dv_template(
         namespace=namespace_name,
         os_flavor=OS_FLAVOR_FEDORA,
         client=client,
-        memory_requests=Images.Fedora.DEFAULT_MEMORY_SIZE,
+        memory_guest=Images.Fedora.DEFAULT_MEMORY_SIZE,
         data_volume_template=data_volume_template_dict(
             target_dv_name=dv_name,
             target_dv_namespace=namespace_name,
@@ -114,7 +114,7 @@ def test_successful_clone_of_large_image(
         pytest.param(
             {
                 "dv_name": "dv-source",
-                "image": f"{Images.Fedora.DIR}/{Images.Fedora.FEDORA41_IMG}",
+                "image": FEDORA_LATEST["image_path"],
                 "dv_size": Images.Fedora.DEFAULT_DV_SIZE,
             },
             marks=(
@@ -199,7 +199,7 @@ def test_successful_vm_from_cloned_dv_windows(
         pytest.param(
             {
                 "dv_name": "dv-source",
-                "image": f"{Images.Fedora.DIR}/{Images.Fedora.FEDORA41_IMG}",
+                "image": FEDORA_LATEST["image_path"],
                 "dv_size": Images.Fedora.DEFAULT_DV_SIZE,
             },
             marks=(pytest.mark.polarion("CNV-4035")),
@@ -239,7 +239,7 @@ def test_disk_image_after_clone(
         pytest.param(
             {
                 "dv_name": "dv-source-fedora",
-                "image": f"{Images.Fedora.DIR}/{Images.Fedora.FEDORA41_IMG}",
+                "image": FEDORA_LATEST["image_path"],
                 "dv_size": Images.Fedora.DEFAULT_DV_SIZE,
             },
             marks=(pytest.mark.polarion("CNV-3545"), pytest.mark.gating()),
