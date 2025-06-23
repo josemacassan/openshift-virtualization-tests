@@ -114,7 +114,7 @@ def test_successful_clone_of_large_image(
         pytest.param(
             {
                 "dv_name": "dv-source",
-                "image": FEDORA_LATEST["image_path"],
+                "image": FEDORA_LATEST.get("image_path"),
                 "dv_size": Images.Fedora.DEFAULT_DV_SIZE,
             },
             marks=(
@@ -199,7 +199,7 @@ def test_successful_vm_from_cloned_dv_windows(
         pytest.param(
             {
                 "dv_name": "dv-source",
-                "image": FEDORA_LATEST["image_path"],
+                "image": FEDORA_LATEST.get("image_path"),
                 "dv_size": Images.Fedora.DEFAULT_DV_SIZE,
             },
             marks=(pytest.mark.polarion("CNV-4035")),
@@ -239,7 +239,7 @@ def test_disk_image_after_clone(
         pytest.param(
             {
                 "dv_name": "dv-source-fedora",
-                "image": FEDORA_LATEST["image_path"],
+                "image": FEDORA_LATEST.get("image_path"),
                 "dv_size": Images.Fedora.DEFAULT_DV_SIZE,
             },
             marks=(pytest.mark.polarion("CNV-3545"), pytest.mark.gating()),

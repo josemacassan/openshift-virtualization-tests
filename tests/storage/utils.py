@@ -428,7 +428,7 @@ def create_fedora_dv(
     with create_dv(
         dv_name=f"dv-{name}",
         namespace=namespace,
-        url=f"{get_test_artifact_server_url()}{FEDORA_LATEST['image_path']}",
+        url=f"{get_test_artifact_server_url()}{FEDORA_LATEST.get('image_path')}",
         size=dv_size,
         storage_class=storage_class,
         access_modes=access_modes,
