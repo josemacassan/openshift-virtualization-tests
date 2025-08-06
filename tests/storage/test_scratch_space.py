@@ -71,7 +71,7 @@ def scratch_pvc_bound(dv):
 
 @pytest.mark.xfail(
     reason=f"{QUARANTINED}: flaky test, unable to reproduce locally. Fails occasionally in the "
-    f"automation due to a not found pvc when trying to delete it; CNV-66721",
+    f"automation due to a not found pvc when trying to delete it; CNV-66463",
     run=False,
 )
 @pytest.mark.parametrize(
