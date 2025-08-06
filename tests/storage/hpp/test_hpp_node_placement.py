@@ -66,7 +66,7 @@ def test_create_dv_on_right_node_with_node_placement(
 
 
 @pytest.mark.xfail(
-    reason=f"{QUARANTINED}: fails since 4.19; CNV-66721",
+    reason=f"{QUARANTINED}: flaky test, failure only reproduced in full tier2 run; CNV-54589",
     run=False,
 )
 @pytest.mark.post_upgrade
