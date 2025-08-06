@@ -194,8 +194,7 @@ def test_successful_vm_from_cloned_dv_windows(
 
 
 @pytest.mark.xfail(
-    reason=f"{QUARANTINED}: consistently failing test, failure reproducible in full tier2 run. "
-    f"Investigate ssh timeout connection; CNV-66721",
+    reason=f"{QUARANTINED}: consistently failing test. Timeout into ssh connection to the vm; CNV-66721",
     run=False,
 )
 @pytest.mark.sno
