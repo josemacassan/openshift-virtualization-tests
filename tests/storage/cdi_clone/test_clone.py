@@ -3,13 +3,13 @@ Clone tests
 """
 
 import pytest
+from ocp_resources.data_source import DataSource
 from ocp_resources.datavolume import DataVolume
 
 from tests.os_params import FEDORA_LATEST, WINDOWS_11, WINDOWS_11_TEMPLATE_LABELS
 from tests.storage.utils import (
     assert_pvc_snapshot_clone_annotation,
     assert_use_populator,
-    create_vm_and_verify_image_permission,
     create_vm_from_dv,
     create_windows_vm_validate_guest_agent_info,
 )
@@ -17,7 +17,6 @@ from utilities.constants import (
     OS_FLAVOR_CIRROS,
     OS_FLAVOR_FEDORA,
     OS_FLAVOR_WINDOWS,
-    QUARANTINED,
     TIMEOUT_1MIN,
     TIMEOUT_10MIN,
     TIMEOUT_40MIN,
@@ -193,48 +192,54 @@ def test_successful_vm_from_cloned_dv_windows(
         )
 
 
-@pytest.mark.xfail(
-    reason=f"{QUARANTINED}: consistently failing test. Timeout into ssh connection to the vm; CNV-66721",
-    run=False,
-)
 @pytest.mark.sno
-@pytest.mark.parametrize(
-    "data_volume_multi_storage_scope_function",
-    [
-        pytest.param(
-            {
-                "dv_name": "dv-source",
-                "image": FEDORA_LATEST.get("image_path"),
-                "dv_size": Images.Fedora.DEFAULT_DV_SIZE,
-            },
-            marks=(pytest.mark.polarion("CNV-4035")),
-        )
-    ],
-    indirect=True,
-)
 @pytest.mark.s390x
+@pytest.fixture(scope="class")
+def fedora_data_source_scope_module(golden_images_namespace):
+    return DataSource(
+        namespace=golden_images_namespace.name,
+        name=OS_FLAVOR_FEDORA,
+        client=golden_images_namespace.client,
+        ensure_exists=True,
+    )
+
+
+@pytest.mark.polarion("CNV-4035")
 def test_disk_image_after_clone(
-    skip_block_volumemode_scope_function,
     unprivileged_client,
     namespace,
-    data_volume_multi_storage_scope_function,
+    storage_class_name_scope_module,
+    fedora_data_source_scope_module,
     cluster_csi_drivers_names,
 ):
-    storage_class = data_volume_multi_storage_scope_function.storage_class
-    with create_dv(
-        source="pvc",
-        dv_name="dv-cnv-4035",
+    data_source = fedora_data_source_scope_module
+    source_dict = data_source.source.instance.to_dict()
+    source_spec_dict = source_dict["spec"]
+
+    with DataVolume(
+        name="dv-cnv-4035",
         namespace=namespace.name,
-        size=data_volume_multi_storage_scope_function.size,
-        source_pvc=data_volume_multi_storage_scope_function.name,
         client=unprivileged_client,
-        storage_class=storage_class,
+        size=source_spec_dict.get("resources", {}).get("requests", {}).get("storage")
+        or source_dict.get("status", {}).get("restoreSize"),
+        api_name="storage",
+        storage_class=storage_class_name_scope_module,
+        source_ref={
+            "kind": data_source.kind,
+            "name": data_source.name,
+            "namespace": data_source.namespace,
+        },
     ) as cdv:
         cdv.wait_for_dv_success()
-        create_vm_and_verify_image_permission(dv=cdv)
+
+        with create_vm_from_dv(
+            dv=cdv, vm_name="fedora-vm", os_flavor=OS_FLAVOR_FEDORA, memory_guest=Images.Fedora.DEFAULT_MEMORY_SIZE
+        ) as vm_dv:
+            check_disk_count_in_vm(vm=vm_dv)
+
         assert_use_populator(
             pvc=cdv.pvc,
-            storage_class=storage_class,
+            storage_class=cdv.storage_class,
             cluster_csi_drivers_names=cluster_csi_drivers_names,
         )
 
