@@ -201,10 +201,11 @@ def test_disk_image_after_clone(
     fedora_data_source_scope_module,
     cluster_csi_drivers_names,
 ):
-    ds_dict = fedora_data_source_scope_module.instance.to_dict()
-    size = ds_dict.get("spec", {}).get("storage", {}).get("resources", {}).get("requests", {}).get(
-        "storage"
-    ) or ds_dict.get("status", {}).get("restoreSize")
+    source_dict = fedora_data_source_scope_module.source.instance.to_dict()
+    source_spec_dict = source_dict["spec"]
+    size = source_spec_dict.get("resources", {}).get("requests", {}).get("storage") or source_dict.get(
+        "status", {}
+    ).get("restoreSize")
 
     with DataVolume(
         name="dv-cnv-4035",
@@ -219,16 +220,14 @@ def test_disk_image_after_clone(
             "namespace": fedora_data_source_scope_module.namespace,
         },
     ) as cdv:
-        cdv.wait_for_dv_success()
-
+        cdv.wait(wait_for_exist_only=True)
         with create_vm_from_dv(
             dv=cdv,
             vm_name="fedora-vm",
             os_flavor=OS_FLAVOR_FEDORA,
             memory_guest=Images.Fedora.DEFAULT_MEMORY_SIZE,
-            start=False,
+            wait_for_interfaces=True,
         ) as vm_dv:
-            running_vm(vm=vm_dv, wait_for_interfaces=True)
             check_disk_count_in_vm(vm=vm_dv)
 
         assert_use_populator(
