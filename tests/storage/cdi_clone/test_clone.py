@@ -3,7 +3,6 @@ Clone tests
 """
 
 import pytest
-from ocp_resources.data_source import DataSource
 from ocp_resources.datavolume import DataVolume
 
 from tests.os_params import FEDORA_LATEST, WINDOWS_11, WINDOWS_11_TEMPLATE_LABELS
@@ -194,16 +193,6 @@ def test_successful_vm_from_cloned_dv_windows(
 
 @pytest.mark.sno
 @pytest.mark.s390x
-@pytest.fixture(scope="class")
-def fedora_data_source_scope_module(golden_images_namespace):
-    return DataSource(
-        namespace=golden_images_namespace.name,
-        name=OS_FLAVOR_FEDORA,
-        client=golden_images_namespace.client,
-        ensure_exists=True,
-    )
-
-
 @pytest.mark.polarion("CNV-4035")
 def test_disk_image_after_clone(
     unprivileged_client,
@@ -212,29 +201,34 @@ def test_disk_image_after_clone(
     fedora_data_source_scope_module,
     cluster_csi_drivers_names,
 ):
-    data_source = fedora_data_source_scope_module
-    source_dict = data_source.source.instance.to_dict()
-    source_spec_dict = source_dict["spec"]
+    ds_dict = fedora_data_source_scope_module.instance.to_dict()
+    size = ds_dict.get("spec", {}).get("storage", {}).get("resources", {}).get("requests", {}).get(
+        "storage"
+    ) or ds_dict.get("status", {}).get("restoreSize")
 
     with DataVolume(
         name="dv-cnv-4035",
         namespace=namespace.name,
         client=unprivileged_client,
-        size=source_spec_dict.get("resources", {}).get("requests", {}).get("storage")
-        or source_dict.get("status", {}).get("restoreSize"),
+        size=size,
         api_name="storage",
         storage_class=storage_class_name_scope_module,
         source_ref={
-            "kind": data_source.kind,
-            "name": data_source.name,
-            "namespace": data_source.namespace,
+            "kind": fedora_data_source_scope_module.kind,
+            "name": fedora_data_source_scope_module.name,
+            "namespace": fedora_data_source_scope_module.namespace,
         },
     ) as cdv:
         cdv.wait_for_dv_success()
 
         with create_vm_from_dv(
-            dv=cdv, vm_name="fedora-vm", os_flavor=OS_FLAVOR_FEDORA, memory_guest=Images.Fedora.DEFAULT_MEMORY_SIZE
+            dv=cdv,
+            vm_name="fedora-vm",
+            os_flavor=OS_FLAVOR_FEDORA,
+            memory_guest=Images.Fedora.DEFAULT_MEMORY_SIZE,
+            start=False,
         ) as vm_dv:
+            running_vm(vm=vm_dv, wait_for_interfaces=True)
             check_disk_count_in_vm(vm=vm_dv)
 
         assert_use_populator(
