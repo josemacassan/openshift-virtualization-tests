@@ -220,7 +220,9 @@ def test_disk_image_after_clone(
             "namespace": fedora_data_source_scope_module.namespace,
         },
     ) as cdv:
-        cdv.wait(wait_for_exist_only=True)
+        cdv.wait(timeout=TIMEOUT_10MIN, wait_for_exists_only=True)
+        cdv.pvc.wait()
+
         with create_vm_from_dv(
             dv=cdv,
             vm_name="fedora-vm",
