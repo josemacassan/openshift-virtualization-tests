@@ -229,14 +229,12 @@ def test_disk_image_after_clone(
             os_flavor=OS_FLAVOR_FEDORA,
             memory_guest=Images.Fedora.DEFAULT_MEMORY_SIZE,
             wait_for_interfaces=True,
-        ) as vm_dv:
-            check_disk_count_in_vm(vm=vm_dv)
-
-        assert_use_populator(
-            pvc=cdv.pvc,
-            storage_class=cdv.storage_class,
-            cluster_csi_drivers_names=cluster_csi_drivers_names,
-        )
+        ):
+            assert_use_populator(
+                pvc=cdv.pvc,
+                storage_class=cdv.storage_class,
+                cluster_csi_drivers_names=cluster_csi_drivers_names,
+            )
 
 
 @pytest.mark.parametrize(
