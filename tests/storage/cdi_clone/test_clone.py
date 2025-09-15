@@ -144,7 +144,7 @@ def test_successful_vm_restart_with_cloned_dv(
             vm_name="fedora-vm",
             os_flavor=OS_FLAVOR_FEDORA,
             memory_guest=Images.Fedora.DEFAULT_MEMORY_SIZE,
-            wait_for_interfaces=False,
+            wait_for_interfaces=True,
         ) as vm_dv:
             restart_vm_wait_for_running_vm(vm=vm_dv, wait_for_interfaces=False)
 
