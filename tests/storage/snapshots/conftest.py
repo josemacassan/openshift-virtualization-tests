@@ -8,6 +8,7 @@ import logging
 import shlex
 
 import pytest
+from ocp_resources.data_source import DataSource
 from ocp_resources.datavolume import DataVolume
 from ocp_resources.role_binding import RoleBinding
 from ocp_resources.virtual_machine_snapshot import VirtualMachineSnapshot
@@ -105,3 +106,13 @@ def file_created_during_snapshot(windows_vm_for_snapshot, windows_snapshot):
     run_ssh_commands(host=windows_vm_for_snapshot.ssh_exec, commands=cmd)
     windows_snapshot.wait_snapshot_done(timeout=TIMEOUT_10MIN)
     windows_vm_for_snapshot.stop(wait=True)
+
+
+@pytest.fixture(scope="module")
+def rhel_data_source_scope_module(golden_images_namespace):
+    return DataSource(
+        namespace=golden_images_namespace.name,
+        name="rhel9",
+        client=golden_images_namespace.client,
+        ensure_exists=True,
+    )

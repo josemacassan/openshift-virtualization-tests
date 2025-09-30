@@ -795,6 +795,23 @@ def is_snapshot_supported_by_sc(sc_name, client):
     return False
 
 
+def create_rhel_dv_for_snapshot_dict(name, namespace, storage_class, rhel_data_source):
+    dv = DataVolume(
+        api_name="storage",
+        name=f"dv-{name}",
+        namespace=namespace,
+        storage_class=storage_class,
+        size=Images.Rhel.DEFAULT_DV_SIZE,
+        source_ref={
+            "kind": rhel_data_source.kind,
+            "name": rhel_data_source.name,
+            "namespace": rhel_data_source.namespace,
+        },
+    )
+    dv.to_dict()
+    return dv.res
+
+
 def create_cirros_dv_for_snapshot_dict(name, namespace, storage_class, artifactory_secret, artifactory_config_map):
     dv = DataVolume(
         api_name="storage",

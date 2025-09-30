@@ -44,6 +44,7 @@ from utilities.constants import (
     CNV_TEST_SERVICE_ACCOUNT,
     CNV_TESTS_CONTAINER,
     OS_FLAVOR_CIRROS,
+    OS_FLAVOR_RHEL,
     SECURITY_CONTEXT,
     TIMEOUT_1MIN,
     TIMEOUT_5SEC,
@@ -62,6 +63,7 @@ from utilities.infra import (
 )
 from utilities.storage import (
     create_cirros_dv_for_snapshot_dict,
+    create_rhel_dv_for_snapshot_dict,
     data_volume,
     get_downloaded_artifact,
     sc_volume_binding_mode_is_wffc,
@@ -482,6 +484,46 @@ def cirros_dv_for_snapshot_dict(
         artifactory_secret=artifactory_secret_scope_module,
         artifactory_config_map=artifactory_config_map_scope_module,
     )
+
+
+@pytest.fixture()
+def rhel_dv_for_snapshot_dict(
+    namespace,
+    rhel_vm_name,
+    storage_class_snapshot_matrix__module__,
+    rhel_data_source_scope_module,
+):
+    yield create_rhel_dv_for_snapshot_dict(
+        name=rhel_vm_name,
+        namespace=namespace.name,
+        storage_class=[*storage_class_snapshot_matrix__module__][0],
+        rhel_data_source=rhel_data_source_scope_module,
+    )
+
+
+@pytest.fixture()
+def rhel_vm_for_snapshot(
+    admin_client,
+    namespace,
+    rhel_vm_name,
+    rhel_dv_for_snapshot_dict,
+):
+    """
+    Create a VM with a DV that supports snapshots
+    """
+    dv_metadata = rhel_dv_for_snapshot_dict["metadata"]
+    with VirtualMachineForTests(
+        client=admin_client,
+        name=rhel_vm_name,
+        namespace=dv_metadata["namespace"],
+        os_flavor=OS_FLAVOR_RHEL,
+        memory_guest=Images.Rhel.DEFAULT_MEMORY_SIZE,
+        data_volume_template={
+            "metadata": dv_metadata,
+            "spec": rhel_dv_for_snapshot_dict["spec"],
+        },
+    ) as vm:
+        yield vm
 
 
 @pytest.fixture()

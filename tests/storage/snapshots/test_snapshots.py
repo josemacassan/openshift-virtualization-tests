@@ -48,7 +48,7 @@ def test_snapshot_feature_gate_present(kubevirt_feature_gates):
 
 class TestRestoreSnapshots:
     @pytest.mark.parametrize(
-        "cirros_vm_name, snapshots_with_content, expected_results, snapshots_to_restore_idx",
+        "rhel_vm_name, snapshots_with_content, expected_results, snapshots_to_restore_idx",
         [
             pytest.param(
                 {"vm_name": "vm-cnv-4789"},
@@ -110,7 +110,7 @@ class TestRestoreSnapshots:
                 id="test_restore_all_snapshots",
             ),
         ],
-        indirect=["cirros_vm_name", "snapshots_with_content"],
+        indirect=["rhel_vm_name", "snapshots_with_content"],
     )
     def test_restore_snapshots(
         self,
