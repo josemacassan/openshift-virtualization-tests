@@ -11,7 +11,7 @@ from ocp_resources.resource import Resource
 from ocp_resources.virtual_machine_export import VirtualMachineExport
 from pytest_testconfig import config as py_config
 
-from tests.storage.vm_export.utils import get_pvc_sha256sum
+from tests.storage.vm_export.utils import check_pvc_data_in_pod
 from utilities.constants import Images
 from utilities.infra import run_virtctl_command
 from utilities.virt import running_vm
@@ -82,15 +82,22 @@ def test_vmexport_snapshot_manifests(
     vm_from_vmexport,
 ):
     pvc_name = vm_from_vmexport.instance.to_dict()["spec"]["dataVolumeTemplates"][0]["metadata"]["name"]
-    source_pvc_sha256sum = get_pvc_sha256sum(
-        pvc_name=f"{vmexport_from_vmsnapshot.name}-{pvc_name}",
-        pvc_namespace=namespace.name,
+
+    test_content = "VMExport simple data integrity test"
+
+    source_result = check_pvc_data_in_pod(
+        pvc_name=f"{vmexport_from_vmsnapshot.name}-{pvc_name}", pvc_namespace=namespace.name, test_content=test_content
     )
-    target_pvc_sha256sum = get_pvc_sha256sum(pvc_name=pvc_name, pvc_namespace=vm_from_vmexport.namespace)
+
+    target_result = check_pvc_data_in_pod(
+        pvc_name=pvc_name, pvc_namespace=vm_from_vmexport.namespace, test_content=test_content
+    )
+
     running_vm(vm=vm_from_vmexport, wait_for_interfaces=False)
-    assert source_pvc_sha256sum == target_pvc_sha256sum, (
-        f"Source sha256sum: '\n'{source_pvc_sha256sum} is not equal to the target: '\n'{target_pvc_sha256sum}"
-    )
+
+    assert source_result == test_content, f"Source PVC test failed: '{source_result}'"
+    assert target_result == test_content, f"Target PVC test failed: '{target_result}'"
+    assert source_result == target_result, f"PVC tests differ: source='{source_result}' vs target='{target_result}'"
 
 
 @pytest.mark.s390x
