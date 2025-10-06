@@ -7,12 +7,8 @@ import logging
 import shlex
 
 import yaml
-from ocp_resources.persistent_volume_claim import PersistentVolumeClaim
-from ocp_resources.storage_profile import StorageProfile
 from ocp_resources.virtual_machine import VirtualMachine
 from pyhelper_utils.shell import run_command
-
-from utilities.storage import PodWithPVC, get_containers_for_pods_with_pvc
 
 LOGGER = logging.getLogger(__name__)
 
