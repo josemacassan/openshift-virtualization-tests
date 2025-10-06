@@ -551,21 +551,17 @@ def rhel_vm_for_snapshot_with_content(
     ) as vm:
         running_vm(vm=vm)
 
-        test_file_name = "/tmp/test_file.txt"
+        test_file_name = "test_file.txt"
         test_file_content = "Test content for VMExport"
 
-        cmd = shlex.split(f"echo '{test_file_content}' > {test_file_name}")
+        cmd = shlex.split(f"echo '{test_file_content}' > {test_file_name} && sync")
         run_ssh_commands(host=vm.ssh_exec, commands=cmd)
-
-        vm.test_file_name = test_file_name
-        vm.test_file_content = test_file_content
 
         yield vm
 
 
 @pytest.fixture()
 def rhel_vm_snapshot_with_content(
-    namespace,
     admin_client,
     rhel_vm_for_snapshot_with_content,
 ):

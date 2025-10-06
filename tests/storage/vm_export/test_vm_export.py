@@ -9,12 +9,13 @@ from kubernetes.client import ApiException
 from ocp_resources.persistent_volume_claim import PersistentVolumeClaim
 from ocp_resources.resource import Resource
 from ocp_resources.virtual_machine_export import VirtualMachineExport
-from pyhelper_utils.shell import run_ssh_commands
+
+# from pyhelper_utils.shell import run_ssh_commands  # Replaced with vm_console_run_commands
 from pytest_testconfig import config as py_config
 
 from utilities.constants import Images
 from utilities.infra import run_virtctl_command
-from utilities.virt import running_vm
+from utilities.virt import running_vm, vm_console_run_commands
 
 VIRTUALMACHINEEXPORTS = "virtualmachineexports"
 ERROR_MSG_USER_CANNOT_CREATE_VM_EXPORT = (
@@ -65,15 +66,19 @@ def test_fail_to_vmexport_with_unprivileged_client_no_permissions(
 @pytest.mark.gating()
 @pytest.mark.s390x
 def test_vmexport_snapshot_manifests(
-    namespace,
-    vmexport_from_vmsnapshot,
     vm_from_vmexport,
 ):
-    running_vm(vm=vm_from_vmexport)
-
     test_file_content = "Test content for VMExport"
-    result = run_ssh_commands(host=vm_from_vmexport.ssh_exec, commands=["cat /tmp/test_file.txt"])
-    assert result[0].strip() == test_file_content
+    test_file_name = "test_file.txt"
+
+    running_vm(vm=vm_from_vmexport, wait_for_interfaces=True)
+
+    command = f"cat {test_file_name}"
+    result = vm_console_run_commands(vm=vm_from_vmexport, commands=[command], return_code_validation=False)
+
+    console_output = result[command]
+    file_content = console_output[1].strip()
+    assert file_content == test_file_content
 
 
 @pytest.mark.s390x
