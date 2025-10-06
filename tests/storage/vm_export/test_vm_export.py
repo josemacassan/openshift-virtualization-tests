@@ -74,7 +74,7 @@ def test_vmexport_snapshot_manifests(
     running_vm(vm=vm_from_vmexport, wait_for_interfaces=True)
 
     command = f"cat {test_file_name}"
-    result = vm_console_run_commands(vm=vm_from_vmexport, commands=[command], return_code_validation=False)
+    result = vm_console_run_commands(vm=vm_from_vmexport, commands=[command])
 
     console_output = result[command]
     file_content = console_output[1].strip()
