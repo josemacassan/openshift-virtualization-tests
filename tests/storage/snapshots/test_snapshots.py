@@ -26,7 +26,7 @@ from tests.storage.snapshots.utils import (
 )
 from tests.storage.utils import assert_windows_directory_existence
 from utilities.constants import LS_COMMAND, TIMEOUT_1MIN, TIMEOUT_10SEC
-from utilities.storage import run_command_on_cirros_vm_and_check_output
+from utilities.storage import run_command_on_cirros_vm_and_check_output, run_command_on_vm_and_check_output
 
 LOGGER = logging.getLogger(__name__)
 
@@ -114,7 +114,7 @@ class TestRestoreSnapshots:
     )
     def test_restore_snapshots(
         self,
-        cirros_vm_for_snapshot,
+        rhel_vm_for_snapshot,
         snapshots_with_content,
         expected_results,
         snapshots_to_restore_idx,
@@ -123,18 +123,18 @@ class TestRestoreSnapshots:
             snap_idx = snapshots_to_restore_idx[idx]
             with VirtualMachineRestore(
                 name=f"restore-snapshot-{snap_idx}",
-                namespace=cirros_vm_for_snapshot.namespace,
-                vm_name=cirros_vm_for_snapshot.name,
+                namespace=rhel_vm_for_snapshot.namespace,
+                vm_name=rhel_vm_for_snapshot.name,
                 snapshot_name=snapshots_with_content[snap_idx].name,
             ) as vm_restore:
                 vm_restore.wait_restore_done()
-                cirros_vm_for_snapshot.start(wait=True)
-                run_command_on_cirros_vm_and_check_output(
-                    vm=cirros_vm_for_snapshot,
+                rhel_vm_for_snapshot.start(wait=True)
+                run_command_on_vm_and_check_output(
+                    vm=rhel_vm_for_snapshot,
                     command=LS_COMMAND,
                     expected_result=expected_results[idx],
                 )
-                cirros_vm_for_snapshot.stop(wait=True)
+                rhel_vm_for_snapshot.stop(wait=True)
 
     @pytest.mark.parametrize(
         "cirros_vm_name, snapshots_with_content",
