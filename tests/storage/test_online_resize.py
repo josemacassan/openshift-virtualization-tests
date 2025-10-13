@@ -15,7 +15,7 @@ from ocp_resources.virtual_machine_restore import VirtualMachineRestore
 from pyhelper_utils.shell import run_ssh_commands
 from timeout_sampler import TimeoutExpiredError, TimeoutSampler
 
-from tests.storage.utils import create_cirros_dv, create_rhel_dv
+from tests.storage.utils import create_rhel_dv
 from utilities.constants import OS_FLAVOR_RHEL, TIMEOUT_1MIN, TIMEOUT_4MIN, TIMEOUT_5SEC, Images
 from utilities.storage import (
     add_dv_to_vm,
@@ -109,7 +109,7 @@ def get_resize_count(vm):
     commands = shlex.split("sudo dmesg | grep -c 'new size' || true")
     result = run_ssh_commands(host=vm.ssh_exec, commands=commands)[0]
     # Clean up the result - strip whitespace and handle multiple lines
-    cleaned_result = result.strip().split('\n')[-1]  # Take the last line and strip whitespace
+    cleaned_result = result.strip().split("\n")[-1]  # Take the last line and strip whitespace
     return int(cleaned_result)
 
 
@@ -159,19 +159,6 @@ def vm_restore(vm, name):
         yield vm
 
 
-@pytest.fixture()
-def cirros_dv_for_online_resize(
-    namespace,
-    cirros_vm_name,
-    storage_class_matrix_online_resize_matrix__module__,
-):
-    yield from create_cirros_dv(
-        namespace=namespace.name,
-        name=cirros_vm_name,
-        storage_class=[*storage_class_matrix_online_resize_matrix__module__][0],
-    )
-
-
 # NEW FOR RHEL
 @pytest.fixture()
 def rhel_dv_for_online_resize(
@@ -198,35 +185,6 @@ def second_rhel_dv_for_online_resize(rhel_dv_for_online_resize):
 
 
 @pytest.fixture()
-def second_cirros_dv_for_online_resize(cirros_dv_for_online_resize):
-    with clone_dv(
-        dv=cirros_dv_for_online_resize,
-        size=cirros_dv_for_online_resize.size,
-    ) as second_dv:
-        yield second_dv
-
-
-@pytest.fixture()
-def cirros_vm_for_online_resize(
-    admin_client,
-    cirros_dv_for_online_resize,
-    namespace,
-    cirros_vm_name,
-):
-    """
-    Create a VM with a DV from the cirros_dv_for_online_resize fixture
-    """
-    with VirtualMachineForTests(
-        name=cirros_vm_name,
-        namespace=namespace.name,
-        data_volume=cirros_dv_for_online_resize,
-        memory_guest=Images.Cirros.DEFAULT_MEMORY_SIZE,
-        os_flavor=Images.Cirros.OS_FLAVOR,
-    ) as vm:
-        yield vm
-
-
-@pytest.fixture()
 def rhel_vm_for_online_resize(admin_client, rhel_dv_for_online_resize, namespace, rhel_vm_name):
     with VirtualMachineForTests(
         client=admin_client,
@@ -240,22 +198,10 @@ def rhel_vm_for_online_resize(admin_client, rhel_dv_for_online_resize, namespace
 
 
 @pytest.fixture()
-def cirros_vm_after_expand(cirros_dv_for_online_resize, cirros_vm_for_online_resize, running_cirros_vm):
-    with wait_for_resize(vm=cirros_vm_for_online_resize):
-        expand_pvc(dv=cirros_dv_for_online_resize, size_change=SMALLEST_POSSIBLE_EXPAND)
-    return cirros_vm_for_online_resize
-
-
-@pytest.fixture()
 def rhel_vm_after_expand(rhel_dv_for_online_resize, rhel_vm_for_online_resize, running_rhel_vm):
     with wait_for_resize(vm=rhel_vm_for_online_resize):
         expand_pvc(dv=rhel_dv_for_online_resize, size_change=SMALLEST_POSSIBLE_EXPAND)
     return rhel_vm_for_online_resize
-
-
-@pytest.fixture()
-def running_cirros_vm(cirros_vm_for_online_resize):
-    running_vm(vm=cirros_vm_for_online_resize, wait_for_interfaces=False)
 
 
 @pytest.fixture()
