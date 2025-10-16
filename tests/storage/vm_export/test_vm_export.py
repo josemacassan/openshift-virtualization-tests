@@ -69,17 +69,14 @@ def test_fail_to_vmexport_with_unprivileged_client_no_permissions(
 def test_vmexport_snapshot_manifests(
     vm_from_vmexport,
 ):
-    test_file_content = VM_EXPORT_TEST_FILE_CONTENT
-    test_file_name = VM_EXPORT_TEST_FILE_NAME
-
     running_vm(vm=vm_from_vmexport, wait_for_interfaces=True)
 
-    command = f"cat {test_file_name}"
+    command = f"cat {VM_EXPORT_TEST_FILE_NAME}"
     result = vm_console_run_commands(vm=vm_from_vmexport, commands=[command])
 
     console_output = result[command]
     file_content = console_output[1].strip()
-    assert file_content == test_file_content
+    assert file_content == VM_EXPORT_TEST_FILE_CONTENT
 
 
 @pytest.mark.s390x
