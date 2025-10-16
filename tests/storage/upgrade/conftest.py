@@ -68,7 +68,7 @@ def skip_if_not_override_cdiconfig_scratch_space(override_cdiconfig_scratch_spec
 
 
 @pytest.fixture(scope="session")
-def cirros_vm_for_upgrade_a(
+def rhel_vm_for_upgrade_a(
     upgrade_namespace_scope_session,
     admin_client,
     storage_class_for_snapshot,
@@ -83,13 +83,12 @@ def cirros_vm_for_upgrade_a(
     ) as vm:
         yield vm
 
-
 @pytest.fixture(scope="session")
 def snapshots_for_upgrade_a(
     admin_client,
-    cirros_vm_for_upgrade_a,
+    rhel_vm_for_upgrade_a,
 ):
-    with create_snapshot_for_upgrade(vm=cirros_vm_for_upgrade_a, client=admin_client) as snapshot:
+    with create_snapshot_for_upgrade(vm=rhel_vm_for_upgrade_a, client=admin_client) as snapshot:
         yield snapshot
 
 
