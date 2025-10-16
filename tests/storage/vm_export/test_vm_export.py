@@ -16,6 +16,7 @@ from pytest_testconfig import config as py_config
 from utilities.constants import Images
 from utilities.infra import run_virtctl_command
 from utilities.virt import running_vm, vm_console_run_commands
+from tests.storage.constants import VM_EXPORT_TEST_FILE_CONTENT, VM_EXPORT_TEST_FILE_NAME
 
 VIRTUALMACHINEEXPORTS = "virtualmachineexports"
 ERROR_MSG_USER_CANNOT_CREATE_VM_EXPORT = (
@@ -68,8 +69,8 @@ def test_fail_to_vmexport_with_unprivileged_client_no_permissions(
 def test_vmexport_snapshot_manifests(
     vm_from_vmexport,
 ):
-    test_file_content = "Test content for VMExport"
-    test_file_name = "test_file.txt"
+    test_file_content = VM_EXPORT_TEST_FILE_CONTENT
+    test_file_name = VM_EXPORT_TEST_FILE_NAME
 
     running_vm(vm=vm_from_vmexport, wait_for_interfaces=True)
 

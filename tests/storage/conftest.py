@@ -38,6 +38,8 @@ from tests.storage.constants import (
     HPP_STORAGE_CLASSES,
     HTTPS_CONFIG_MAP_NAME,
     INTERNAL_HTTP_CONFIGMAP_NAME,
+    VM_EXPORT_TEST_FILE_CONTENT,
+    VM_EXPORT_TEST_FILE_NAME,
 )
 from tests.storage.utils import (
     HttpService,
@@ -551,8 +553,8 @@ def rhel_vm_for_snapshot_with_content(
     ) as vm:
         running_vm(vm=vm)
 
-        test_file_name = "test_file.txt"
-        test_file_content = "Test content for VMExport"
+        test_file_name = VM_EXPORT_TEST_FILE_NAME
+        test_file_content = VM_EXPORT_TEST_FILE_CONTENT
 
         cmd = shlex.split(f"echo '{test_file_content}' > {test_file_name} && sync")
         run_ssh_commands(host=vm.ssh_exec, commands=cmd)
