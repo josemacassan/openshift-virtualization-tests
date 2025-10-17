@@ -553,10 +553,7 @@ def rhel_vm_for_snapshot_with_content(
     ) as vm:
         running_vm(vm=vm)
 
-        test_file_name = VM_EXPORT_TEST_FILE_NAME
-        test_file_content = VM_EXPORT_TEST_FILE_CONTENT
-
-        cmd = shlex.split(f"echo '{test_file_content}' > {test_file_name} && sync")
+        cmd = shlex.split(f"echo '{VM_EXPORT_TEST_FILE_CONTENT}' > {VM_EXPORT_TEST_FILE_NAME} && sync")
         run_ssh_commands(host=vm.ssh_exec, commands=cmd)
 
         yield vm
