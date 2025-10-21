@@ -393,9 +393,10 @@ def update_scratch_space_sc(cdi_config, new_sc, hco):
         yield edited_cdi_config
 
 
+@contextmanager
 def create_rhel_dv(namespace, name, storage_class, rhel_data_source_scope_module):
-    with DataVolume(
-        name=f"dv-{name}",
+    with create_dv(
+        dv_name=f"dv-{name}",
         namespace=namespace,
         api_name="storage",
         size=Images.Rhel.DEFAULT_DV_SIZE,
