@@ -426,11 +426,6 @@ def cirros_vm_name(request):
     return request.param["vm_name"]
 
 
-@pytest.fixture()
-def rhel_vm_name(request):
-    return request.param["vm_name"]
-
-
 @pytest.fixture(scope="module")
 def rhel_data_source_scope_module(golden_images_namespace):
     return DataSource(
