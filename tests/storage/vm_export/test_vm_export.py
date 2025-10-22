@@ -69,8 +69,7 @@ def test_vmexport_snapshot_manifests(
 ):
     running_vm(vm=vm_from_vmexport)
 
-    command = f"/bin/cat {VM_EXPORT_TEST_FILE_NAME}"
-    # result = run_ssh_commands(host=vm_from_vmexport.ssh_exec, commands=[command])
+    command = f"cat {VM_EXPORT_TEST_FILE_NAME}"
     result = vm_console_run_commands(vm=vm_from_vmexport, commands=[command])
 
     console_output = result[command]
