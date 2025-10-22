@@ -9,12 +9,13 @@ from kubernetes.client import ApiException
 from ocp_resources.persistent_volume_claim import PersistentVolumeClaim
 from ocp_resources.resource import Resource
 from ocp_resources.virtual_machine_export import VirtualMachineExport
+from pyhelper_utils.shell import run_ssh_commands
 from pytest_testconfig import config as py_config
 
 from tests.storage.vm_export.constants import VM_EXPORT_TEST_FILE_CONTENT, VM_EXPORT_TEST_FILE_NAME
 from utilities.constants import Images
 from utilities.infra import run_virtctl_command
-from utilities.virt import running_vm, vm_console_run_commands
+from utilities.virt import running_vm
 
 VIRTUALMACHINEEXPORTS = "virtualmachineexports"
 ERROR_MSG_USER_CANNOT_CREATE_VM_EXPORT = (
@@ -69,11 +70,9 @@ def test_vmexport_snapshot_manifests(
 ):
     running_vm(vm=vm_from_vmexport)
 
-    command = f"cat {VM_EXPORT_TEST_FILE_NAME}"
-    result = vm_console_run_commands(vm=vm_from_vmexport, commands=[command])
+    result = run_ssh_commands(host=vm_from_vmexport.ssh_exec, commands=shlex.split(f"cat {VM_EXPORT_TEST_FILE_NAME}"))
+    file_content = result[0].strip()
 
-    console_output = result[command]
-    file_content = console_output[1].strip()
     assert file_content == VM_EXPORT_TEST_FILE_CONTENT
 
 
