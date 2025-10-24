@@ -13,7 +13,7 @@ from ocp_resources.virtual_machine_restore import VirtualMachineRestore
 from pyhelper_utils.shell import run_ssh_commands
 from timeout_sampler import TimeoutExpiredError, TimeoutSampler
 
-from utilities.constants import TIMEOUT_4MIN, Images
+from utilities.constants import TIMEOUT_4MIN
 from utilities.storage import create_dv
 from utilities.virt import running_vm
 

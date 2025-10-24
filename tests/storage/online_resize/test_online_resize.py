@@ -11,12 +11,12 @@ from ocp_resources.datavolume import DataVolume
 from timeout_sampler import TimeoutSampler
 
 from tests.storage.online_resize.utils import (
+    SMALLEST_POSSIBLE_EXPAND,
     check_file_unchanged,
     clone_dv,
     expand_pvc,
     vm_restore,
     wait_for_resize,
-    SMALLEST_POSSIBLE_EXPAND,
 )
 from utilities.constants import TIMEOUT_1MIN, TIMEOUT_4MIN, TIMEOUT_5SEC, Images
 from utilities.storage import add_dv_to_vm, vm_snapshot

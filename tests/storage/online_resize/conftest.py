@@ -6,7 +6,14 @@ Fixtures for online resize tests
 
 import pytest
 
-from tests.storage.online_resize.utils import cksum_file, clone_dv, expand_pvc, wait_for_resize, STORED_FILENAME, SMALLEST_POSSIBLE_EXPAND
+from tests.storage.online_resize.utils import (
+    SMALLEST_POSSIBLE_EXPAND,
+    STORED_FILENAME,
+    cksum_file,
+    clone_dv,
+    expand_pvc,
+    wait_for_resize,
+)
 from tests.storage.utils import create_rhel_dv
 from utilities.constants import OS_FLAVOR_RHEL, Images
 from utilities.storage import is_snapshot_supported_by_sc
