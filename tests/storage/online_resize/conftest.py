@@ -42,13 +42,13 @@ def rhel_dv_for_online_resize(
     request,
     namespace,
     storage_class_matrix_online_resize_matrix__module__,
-    rhel_data_source_scope_module,
+    rhel10_data_source_scope_module,
 ):
     with create_rhel_dv(
         namespace=namespace.name,
-        name=request.param["vm_name"],
+        name=request.param["dv_name"],
         storage_class=[*storage_class_matrix_online_resize_matrix__module__][0],
-        rhel_data_source_scope_module=rhel_data_source_scope_module,
+        rhel10_data_source_scope_module=rhel10_data_source_scope_module,
     ) as dv:
         yield dv
 

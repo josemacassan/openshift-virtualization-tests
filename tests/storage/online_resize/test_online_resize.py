@@ -31,7 +31,7 @@ LOGGER = logging.getLogger(__name__)
     "rhel_dv_for_online_resize, rhel_vm_for_online_resize",
     [
         pytest.param(
-            {"vm_name": "cnv-6793"},
+            {"dv_name": "cnv-6793"},
             {"vm_name": "cnv-6793"},
         ),
     ],
@@ -53,7 +53,7 @@ def test_sequential_disk_expand(
     "rhel_dv_for_online_resize, rhel_vm_for_online_resize",
     [
         pytest.param(
-            {"vm_name": "cnv-6794"},
+            {"dv_name": "cnv-6794"},
             {"vm_name": "cnv-6794"},
         ),
     ],
@@ -77,7 +77,7 @@ def test_simultaneous_disk_expand(
     "rhel_dv_for_online_resize, rhel_vm_for_online_resize",
     [
         pytest.param(
-            {"vm_name": "cnv-8257"},
+            {"dv_name": "cnv-8257"},
             {"vm_name": "cnv-8257"},
         ),
     ],
@@ -111,7 +111,7 @@ def test_disk_expand_then_clone_fail(
     "rhel_dv_for_online_resize, rhel_vm_for_online_resize",
     [
         pytest.param(
-            {"vm_name": "cnv-6578"},
+            {"dv_name": "cnv-6578"},
             {"vm_name": "cnv-6578"},
         ),
     ],
@@ -142,7 +142,7 @@ def test_disk_expand_then_clone_success(
     "rhel_dv_for_online_resize, rhel_vm_for_online_resize",
     [
         pytest.param(
-            {"vm_name": "cnv-6580"},
+            {"dv_name": "cnv-6580"},
             {"vm_name": "cnv-6580"},
         ),
     ],
@@ -162,7 +162,7 @@ def test_disk_expand_then_migrate(cpu_for_migration, rhel_vm_after_expand, orig_
     "rhel_dv_for_online_resize, rhel_vm_for_online_resize",
     [
         pytest.param(
-            {"vm_name": "cnv-6797"},
+            {"dv_name": "cnv-6797"},
             {"vm_name": "cnv-6797"},
         ),
     ],

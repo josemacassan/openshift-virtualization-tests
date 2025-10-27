@@ -427,16 +427,6 @@ def cirros_vm_name(request):
 
 
 @pytest.fixture(scope="module")
-def rhel_data_source_scope_module(golden_images_namespace):
-    return DataSource(
-        namespace=golden_images_namespace.name,
-        name="rhel10",
-        client=golden_images_namespace.client,
-        ensure_exists=True,
-    )
-
-
-@pytest.fixture(scope="module")
 def data_volume_multi_hpp_storage(
     request,
     namespace,
@@ -616,3 +606,13 @@ def storage_class_name_immediate_binding_scope_module(storage_class_matrix_immed
 @pytest.fixture(scope="session")
 def cluster_csi_drivers_names():
     yield [csi_driver.name for csi_driver in list(CSIDriver.get())]
+
+
+@pytest.fixture(scope="module")
+def rhel10_data_source_scope_module(golden_images_namespace):
+    return DataSource(
+        namespace=golden_images_namespace.name,
+        name="rhel10",
+        client=golden_images_namespace.client,
+        ensure_exists=True,
+    )
