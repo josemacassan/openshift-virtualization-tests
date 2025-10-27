@@ -13,13 +13,30 @@ from ocp_resources.virtual_machine_restore import VirtualMachineRestore
 from pyhelper_utils.shell import run_ssh_commands
 from timeout_sampler import TimeoutExpiredError, TimeoutSampler
 
-from utilities.constants import TIMEOUT_4MIN
+from utilities.constants import TIMEOUT_4MIN, Images
 from utilities.storage import create_dv
 from utilities.virt import running_vm
 
 LOGGER = logging.getLogger(__name__)
 SMALLEST_POSSIBLE_EXPAND = "1Gi"
 STORED_FILENAME = "random_data_file"
+
+
+@contextmanager
+def create_rhel_dv_from_data_source(namespace, name, storage_class, rhel_data_source):
+    with create_dv(
+        dv_name=f"dv-{name}",
+        namespace=namespace,
+        size=Images.Rhel.DEFAULT_DV_SIZE,
+        storage_class=storage_class,
+        source_ref={
+            "kind": rhel_data_source.kind,
+            "name": rhel_data_source.name,
+            "namespace": rhel_data_source.namespace,
+        },
+    ) as dv:
+        dv.wait_for_dv_success()
+        yield dv
 
 
 @contextmanager

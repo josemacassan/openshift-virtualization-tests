@@ -11,10 +11,10 @@ from tests.storage.online_resize.utils import (
     STORED_FILENAME,
     cksum_file,
     clone_dv,
+    create_rhel_dv_from_data_source,
     expand_pvc,
     wait_for_resize,
 )
-from tests.storage.utils import create_rhel_dv
 from utilities.constants import OS_FLAVOR_RHEL, Images
 from utilities.storage import is_snapshot_supported_by_sc
 from utilities.virt import VirtualMachineForTests, running_vm
@@ -44,11 +44,11 @@ def rhel_dv_for_online_resize(
     storage_class_matrix_online_resize_matrix__module__,
     rhel10_data_source_scope_module,
 ):
-    with create_rhel_dv(
+    with create_rhel_dv_from_data_source(
         namespace=namespace.name,
         name=request.param["dv_name"],
         storage_class=[*storage_class_matrix_online_resize_matrix__module__][0],
-        rhel10_data_source_scope_module=rhel10_data_source_scope_module,
+        rhel_data_source=rhel10_data_source_scope_module,
     ) as dv:
         yield dv
 
