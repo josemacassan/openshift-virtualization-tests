@@ -63,7 +63,6 @@ def test_fail_to_vmexport_with_unprivileged_client_no_permissions(
 
 @pytest.mark.polarion("CNV-9903")
 @pytest.mark.gating()
-@pytest.mark.s390x
 def test_vmexport_snapshot_manifests(
     vm_from_vmexport,
 ):
