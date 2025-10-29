@@ -11,15 +11,15 @@ from ocp_resources.datavolume import DataVolume
 from timeout_sampler import TimeoutSampler
 
 from tests.storage.online_resize.utils import (
+    RHEL_DV_SIZE,
     SMALLEST_POSSIBLE_EXPAND,
     check_file_unchanged,
-    clone_dv,
     expand_pvc,
     vm_restore,
     wait_for_resize,
 )
-from utilities.constants import TIMEOUT_1MIN, TIMEOUT_4MIN, TIMEOUT_5SEC, Images
-from utilities.storage import add_dv_to_vm, vm_snapshot
+from utilities.constants import TIMEOUT_1MIN, TIMEOUT_4MIN, TIMEOUT_5SEC
+from utilities.storage import add_dv_to_vm, create_dv, vm_snapshot
 from utilities.virt import migrate_vm_and_verify, running_vm
 
 LOGGER = logging.getLogger(__name__)
@@ -31,8 +31,8 @@ LOGGER = logging.getLogger(__name__)
     "rhel_dv_for_online_resize, rhel_vm_for_online_resize",
     [
         pytest.param(
-            {"dv_name": "cnv-6793"},
-            {"vm_name": "cnv-6793"},
+            {"dv_name": "sequential-expand-dv"},
+            {"vm_name": "sequential-expand-vm"},
         ),
     ],
     indirect=True,
@@ -53,8 +53,8 @@ def test_sequential_disk_expand(
     "rhel_dv_for_online_resize, rhel_vm_for_online_resize",
     [
         pytest.param(
-            {"dv_name": "cnv-6794"},
-            {"vm_name": "cnv-6794"},
+            {"dv_name": "simultaneous-expand-dv"},
+            {"vm_name": "simultaneous-expand-vm"},
         ),
     ],
     indirect=True,
@@ -77,8 +77,8 @@ def test_simultaneous_disk_expand(
     "rhel_dv_for_online_resize, rhel_vm_for_online_resize",
     [
         pytest.param(
-            {"dv_name": "cnv-8257"},
-            {"vm_name": "cnv-8257"},
+            {"dv_name": "expand-clone-fail-dv"},
+            {"vm_name": "expand-clone-fail-vm"},
         ),
     ],
     indirect=True,
@@ -86,11 +86,18 @@ def test_simultaneous_disk_expand(
 def test_disk_expand_then_clone_fail(
     rhel_dv_for_online_resize,
     rhel_vm_after_expand,
+    unprivileged_client,
 ):
     LOGGER.info("Trying to clone DV with original size - should fail at webhook")
-    with clone_dv(
-        dv=rhel_dv_for_online_resize,
-        size=Images.Rhel.DEFAULT_DV_SIZE,
+    with create_dv(
+        source="pvc",
+        dv_name=f"{rhel_dv_for_online_resize.name}-target",
+        namespace=rhel_dv_for_online_resize.namespace,
+        client=unprivileged_client,
+        size=RHEL_DV_SIZE,
+        storage_class=rhel_dv_for_online_resize.storage_class,
+        volume_mode=rhel_dv_for_online_resize.volume_mode,
+        source_pvc=rhel_dv_for_online_resize.name,
     ) as dv:
         for sample in TimeoutSampler(
             wait_timeout=TIMEOUT_1MIN,
@@ -111,8 +118,8 @@ def test_disk_expand_then_clone_fail(
     "rhel_dv_for_online_resize, rhel_vm_for_online_resize",
     [
         pytest.param(
-            {"dv_name": "cnv-6578"},
-            {"vm_name": "cnv-6578"},
+            {"dv_name": "expand-clone-success-dv"},
+            {"vm_name": "expand-clone-success-vm"},
         ),
     ],
     indirect=True,
@@ -121,14 +128,21 @@ def test_disk_expand_then_clone_fail(
 def test_disk_expand_then_clone_success(
     rhel_dv_for_online_resize,
     rhel_vm_after_expand,
+    unprivileged_client,
 ):
     # Can't clone a running VM
     rhel_vm_after_expand.stop()
 
     LOGGER.info("Trying to clone DV with new size - should succeed")
-    with clone_dv(
-        dv=rhel_dv_for_online_resize,
+    with create_dv(
+        source="pvc",
+        dv_name=f"{rhel_dv_for_online_resize.name}-target",
+        namespace=rhel_dv_for_online_resize.namespace,
+        client=unprivileged_client,
         size=rhel_dv_for_online_resize.pvc.instance.spec.resources.requests.storage,
+        storage_class=rhel_dv_for_online_resize.storage_class,
+        volume_mode=rhel_dv_for_online_resize.volume_mode,
+        source_pvc=rhel_dv_for_online_resize.name,
     ) as cdv:
         cdv.wait_for_condition(
             condition=DataVolume.Condition.Type.READY,
@@ -142,8 +156,8 @@ def test_disk_expand_then_clone_success(
     "rhel_dv_for_online_resize, rhel_vm_for_online_resize",
     [
         pytest.param(
-            {"dv_name": "cnv-6580"},
-            {"vm_name": "cnv-6580"},
+            {"dv_name": "expand-migrate-dv"},
+            {"vm_name": "expand-migrate-vm"},
         ),
     ],
     indirect=True,
@@ -162,8 +176,8 @@ def test_disk_expand_then_migrate(cpu_for_migration, rhel_vm_after_expand, orig_
     "rhel_dv_for_online_resize, rhel_vm_for_online_resize",
     [
         pytest.param(
-            {"dv_name": "cnv-6797"},
-            {"vm_name": "cnv-6797"},
+            {"dv_name": "expand-snapshot-dv"},
+            {"vm_name": "expand-snapshot-vm"},
         ),
     ],
     indirect=True,

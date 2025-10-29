@@ -13,7 +13,7 @@ from ocp_resources.virtual_machine_restore import VirtualMachineRestore
 from pyhelper_utils.shell import run_ssh_commands
 from timeout_sampler import TimeoutExpiredError, TimeoutSampler
 
-from utilities.constants import TIMEOUT_4MIN, Images
+from utilities.constants import TIMEOUT_4MIN
 from utilities.storage import create_dv
 from utilities.virt import running_vm
 
@@ -21,13 +21,17 @@ LOGGER = logging.getLogger(__name__)
 SMALLEST_POSSIBLE_EXPAND = "1Gi"
 STORED_FILENAME = "random_data_file"
 
+# Increase DV size to 40Gi because source storage size should be larger than the target storage size
+RHEL_DV_SIZE = "40Gi"
+
 
 @contextmanager
-def create_rhel_dv_from_data_source(namespace, name, storage_class, rhel_data_source):
+def create_rhel_dv_from_data_source(unprivileged_client, namespace, name, storage_class, rhel_data_source):
     with create_dv(
         dv_name=f"dv-{name}",
         namespace=namespace,
-        size=Images.Rhel.DEFAULT_DV_SIZE,
+        client=unprivileged_client,
+        size=RHEL_DV_SIZE,
         storage_class=storage_class,
         source_ref={
             "kind": rhel_data_source.kind,
@@ -39,23 +43,8 @@ def create_rhel_dv_from_data_source(namespace, name, storage_class, rhel_data_so
         yield dv
 
 
-@contextmanager
-def clone_dv(dv, size):
-    with create_dv(
-        source="pvc",
-        dv_name=f"{dv.name}-target",
-        namespace=dv.namespace,
-        size=size,
-        storage_class=dv.storage_class,
-        volume_mode=dv.volume_mode,
-        source_pvc=dv.name,
-    ) as dv:
-        yield dv
-
-
 def cksum_file(vm, filename, create=False):
     """
-
     Return the checksum of a previously generated file.
     If requested, create the file using random data.
 
@@ -66,7 +55,6 @@ def cksum_file(vm, filename, create=False):
 
     Returns:
         str: the SHA256 checksum of the file
-
     """
     if create:
         LOGGER.info("Creating file with random data")
