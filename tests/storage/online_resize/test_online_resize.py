@@ -181,7 +181,7 @@ def test_disk_expand_then_migrate(rhel_vm_after_expand, orig_cksum):
     indirect=True,
 )
 def test_disk_expand_with_snapshots(
-    skip_if_storage_for_online_resize_does_not_support_snapshots,
+    xfile_skip_if_storage_for_online_resize_does_not_support_snapshots,
     rhel_dv_for_online_resize,
     rhel_vm_for_online_resize,
     orig_cksum,

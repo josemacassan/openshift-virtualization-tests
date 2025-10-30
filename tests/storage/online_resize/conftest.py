@@ -20,7 +20,7 @@ from utilities.virt import VirtualMachineForTests, running_vm
 
 
 @pytest.fixture(scope="module")
-def skip_if_storage_for_online_resize_does_not_support_snapshots(
+def xfile_skip_if_storage_for_online_resize_does_not_support_snapshots(
     admin_client, storage_class_matrix_online_resize_matrix__module__
 ):
     sc_name = [*storage_class_matrix_online_resize_matrix__module__][0]
@@ -93,4 +93,4 @@ def rhel_vm_after_expand(rhel_dv_for_online_resize, rhel_vm_for_online_resize, r
 
 @pytest.fixture()
 def running_rhel_vm(rhel_vm_for_online_resize):
-    running_vm(vm=rhel_vm_for_online_resize)
+    return running_vm(vm=rhel_vm_for_online_resize)
