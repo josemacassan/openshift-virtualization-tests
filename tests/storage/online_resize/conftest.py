@@ -20,7 +20,7 @@ from utilities.virt import VirtualMachineForTests, running_vm
 
 
 @pytest.fixture(scope="module")
-def xfile_skip_if_storage_for_online_resize_does_not_support_snapshots(
+def xfail_skip_if_storage_for_online_resize_does_not_support_snapshots(
     admin_client, storage_class_matrix_online_resize_matrix__module__
 ):
     sc_name = [*storage_class_matrix_online_resize_matrix__module__][0]
