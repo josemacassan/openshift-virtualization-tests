@@ -84,9 +84,9 @@ def test_simultaneous_disk_expand(
     indirect=True,
 )
 def test_disk_expand_then_clone_fail(
+    unprivileged_client,
     rhel_dv_for_online_resize,
     rhel_vm_after_expand,
-    unprivileged_client,
 ):
     LOGGER.info("Trying to clone DV with original size - should fail at webhook")
     with create_dv(
@@ -96,7 +96,6 @@ def test_disk_expand_then_clone_fail(
         client=unprivileged_client,
         size=RHEL_DV_SIZE,
         storage_class=rhel_dv_for_online_resize.storage_class,
-        volume_mode=rhel_dv_for_online_resize.volume_mode,
         source_pvc=rhel_dv_for_online_resize.name,
     ) as dv:
         for sample in TimeoutSampler(
@@ -126,9 +125,9 @@ def test_disk_expand_then_clone_fail(
 )
 @pytest.mark.s390x
 def test_disk_expand_then_clone_success(
+    unprivileged_client,
     rhel_dv_for_online_resize,
     rhel_vm_after_expand,
-    unprivileged_client,
 ):
     # Can't clone a running VM
     rhel_vm_after_expand.stop()
@@ -141,7 +140,6 @@ def test_disk_expand_then_clone_success(
         client=unprivileged_client,
         size=rhel_dv_for_online_resize.pvc.instance.spec.resources.requests.storage,
         storage_class=rhel_dv_for_online_resize.storage_class,
-        volume_mode=rhel_dv_for_online_resize.volume_mode,
         source_pvc=rhel_dv_for_online_resize.name,
     ) as cdv:
         cdv.wait_for_condition(
@@ -163,7 +161,7 @@ def test_disk_expand_then_clone_success(
     indirect=True,
 )
 @pytest.mark.s390x
-def test_disk_expand_then_migrate(cpu_for_migration, rhel_vm_after_expand, orig_cksum):
+def test_disk_expand_then_migrate(rhel_vm_after_expand, orig_cksum):
     migrate_vm_and_verify(
         vm=rhel_vm_after_expand,
         check_ssh_connectivity=True,

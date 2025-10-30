@@ -151,5 +151,5 @@ def vm_restore(vm, name):
         snapshot_name=name,
     ) as restore:
         restore.wait_restore_done()
-        running_vm(vm=vm, wait_for_interfaces=False)
+        running_vm(vm=vm)
         yield vm

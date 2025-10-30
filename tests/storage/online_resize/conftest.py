@@ -21,7 +21,7 @@ from utilities.virt import VirtualMachineForTests, running_vm
 
 @pytest.fixture(scope="module")
 def skip_if_storage_for_online_resize_does_not_support_snapshots(
-    storage_class_matrix_online_resize_matrix__module__, admin_client
+    admin_client, storage_class_matrix_online_resize_matrix__module__
 ):
     sc_name = [*storage_class_matrix_online_resize_matrix__module__][0]
     if not is_snapshot_supported_by_sc(
@@ -63,14 +63,15 @@ def second_rhel_dv_for_online_resize(rhel_dv_for_online_resize, unprivileged_cli
         client=unprivileged_client,
         size=rhel_dv_for_online_resize.size,
         storage_class=rhel_dv_for_online_resize.storage_class,
-        volume_mode=rhel_dv_for_online_resize.volume_mode,
         source_pvc=rhel_dv_for_online_resize.name,
     ) as rhel_dv:
         yield rhel_dv
 
 
 @pytest.fixture()
-def rhel_vm_for_online_resize(request, unprivileged_client, namespace, rhel_dv_for_online_resize):
+def rhel_vm_for_online_resize(
+    request, unprivileged_client, namespace, rhel_dv_for_online_resize, modern_cpu_for_migration
+):
     with VirtualMachineForTests(
         client=unprivileged_client,
         name=request.param["vm_name"],
@@ -78,6 +79,7 @@ def rhel_vm_for_online_resize(request, unprivileged_client, namespace, rhel_dv_f
         data_volume=rhel_dv_for_online_resize,
         memory_guest=Images.Rhel.DEFAULT_MEMORY_SIZE,
         os_flavor=OS_FLAVOR_RHEL,
+        cpu_model=modern_cpu_for_migration,
     ) as vm:
         yield vm
 
