@@ -93,7 +93,7 @@ def snapshots_for_upgrade_a(
 
 
 @pytest.fixture(scope="session")
-def cirros_vm_for_upgrade_b(
+def rhel_vm_for_upgrade_b(
     upgrade_namespace_scope_session,
     admin_client,
     storage_class_for_snapshot,
@@ -112,9 +112,9 @@ def cirros_vm_for_upgrade_b(
 @pytest.fixture(scope="session")
 def snapshots_for_upgrade_b(
     admin_client,
-    cirros_vm_for_upgrade_b,
+    rhel_vm_for_upgrade_b,
 ):
-    with create_snapshot_for_upgrade(vm=cirros_vm_for_upgrade_b, client=admin_client) as snapshot:
+    with create_snapshot_for_upgrade(vm=rhel_vm_for_upgrade_b, client=admin_client) as snapshot:
         yield snapshot
 
 

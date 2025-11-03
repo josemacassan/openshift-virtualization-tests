@@ -2,7 +2,7 @@ from contextlib import contextmanager
 
 from ocp_resources.virtual_machine_snapshot import VirtualMachineSnapshot
 
-from tests.utils import create_cirros_vm
+from tests.utils import create_rhel_vm
 from utilities.storage import write_file
 
 
@@ -14,7 +14,7 @@ def create_vm_for_snapshot_upgrade_tests(
     storage_class_for_snapshot,
     cpu_model,
 ):
-    with create_cirros_vm(
+    with create_rhel_vm(
         storage_class=storage_class_for_snapshot,
         namespace=namespace,
         client=client,
