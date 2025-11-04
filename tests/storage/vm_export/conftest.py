@@ -151,7 +151,7 @@ def vm_from_vmexport(
 
 
 @pytest.fixture()
-def blank_dv_created_by_specific_user(namespace, unprivileged_client):
+def blank_dv_created_by_unprivileged_user(namespace, unprivileged_client):
     with create_dv(
         source="blank",
         dv_name="blank-dv-by-unprivileged-user",
@@ -161,6 +161,22 @@ def blank_dv_created_by_specific_user(namespace, unprivileged_client):
         consume_wffc=False,
         bind_immediate=True,
         client=unprivileged_client,
+    ) as dv:
+        dv.wait_for_dv_success(timeout=TIMEOUT_1MIN)
+        yield dv
+
+
+@pytest.fixture()
+def blank_dv_created_by_admin_user(namespace, admin_client):
+    with create_dv(
+        source="blank",
+        dv_name="blank-dv-by-unprivileged-user",
+        namespace=namespace.name,
+        size="1Gi",
+        storage_class=py_config["default_storage_class"],
+        consume_wffc=False,
+        bind_immediate=True,
+        client=admin_client,
     ) as dv:
         dv.wait_for_dv_success(timeout=TIMEOUT_1MIN)
         yield dv
