@@ -25,7 +25,7 @@ ERROR_MSG_USER_CANNOT_CREATE_VM_EXPORT = (
 @pytest.mark.polarion("CNV-9338")
 @pytest.mark.s390x
 def test_fail_to_vmexport_with_unprivileged_client_no_permissions(
-    blank_dv_created_by_unprivileged_user,
+    blank_dv_created_by_unprivileged_user, unprivileged_client,
 ):
     with pytest.raises(
         ApiException,
@@ -34,14 +34,13 @@ def test_fail_to_vmexport_with_unprivileged_client_no_permissions(
         with VirtualMachineExport(
             name="vmexport-unprivileged",
             namespace=blank_dv_created_by_unprivileged_user.namespace,
-            client=blank_dv_created_by_unprivileged_user.client,
+            client=unprivileged_client,
             source={
                 "apiGroup": "",
                 "kind": PersistentVolumeClaim.kind,
                 "name": blank_dv_created_by_unprivileged_user.name,
             },
         ) as vmexport:
-            import pdb; pdb.set_trace()
             assert not vmexport, "VMExport created by unprivileged client"
 
 

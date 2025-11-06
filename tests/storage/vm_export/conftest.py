@@ -28,6 +28,7 @@ from utilities.infra import create_ns, login_with_user_password
 from utilities.storage import create_dv, data_volume_template_with_source_ref_dict
 from utilities.virt import VirtualMachineForTests, running_vm
 
+RHEL_DV_SIZE = "40Gi"
 
 @pytest.fixture()
 def vmexport_from_vmsnapshot(
@@ -180,6 +181,25 @@ def blank_dv_created_by_admin_user(namespace, admin_client):
     ) as dv:
         dv.wait_for_dv_success(timeout=TIMEOUT_1MIN)
         yield dv
+
+@pytest.fixture()
+def rhel10_dv_created_by_unprivileged_user(unprivileged_client, namespace, rhel10_data_source_scope_module):
+    """Create RHEL10 DV from data source using unprivileged client"""
+    with create_dv(
+        dv_name="dv-rhel10-unprivileged",
+        namespace=namespace.name,
+        client=unprivileged_client,
+        size="40Gi",
+        storage_class=py_config["default_storage_class"],
+        source_ref={
+            "kind": rhel10_data_source_scope_module.kind,
+            "name": rhel10_data_source_scope_module.name,
+            "namespace": rhel10_data_source_scope_module.namespace,
+        },
+    ) as dv:
+        dv.wait_for_dv_success(timeout=TIMEOUT_1MIN)
+        yield dv
+
 
 
 @pytest.fixture()
