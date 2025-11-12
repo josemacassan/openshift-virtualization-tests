@@ -525,6 +525,7 @@ def create_rhel_vm(
     namespace: str,
     client: DynamicClient,
     dv_name: str,
+    dv_size: str,
     vm_name: str,
     rhel10_data_source_scope_module,
     node: Optional[str] = None,
@@ -542,7 +543,7 @@ def create_rhel_vm(
             "namespace": rhel10_data_source_scope_module.namespace,
         },
         storage_class=storage_class,
-        size=Images.Rhel.DEFAULT_DV_SIZE,
+        size=dv_size,
         api_name="storage",
         volume_mode=volume_mode,
     )
@@ -561,7 +562,7 @@ def create_rhel_vm(
         annotations=annotations,
     ) as vm:
         if wait_running:
-            running_vm(vm=vm, wait_for_interfaces=False)
+            running_vm(vm=vm)
         yield vm
 
 @contextmanager
