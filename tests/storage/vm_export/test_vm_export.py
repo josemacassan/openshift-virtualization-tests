@@ -22,10 +22,21 @@ ERROR_MSG_USER_CANNOT_CREATE_VM_EXPORT = (
 )
 
 
-@pytest.mark.polarion("CNV-9338")
+@pytest.mark.parametrize(
+    "namespace",
+    [
+        pytest.param(
+            {"use_unprivileged_client": False},
+            marks=pytest.mark.polarion("CNV-9338"),
+        )
+    ],
+    indirect=True,
+)
 @pytest.mark.s390x
 def test_fail_to_vmexport_with_unprivileged_client_no_permissions(
-    blank_dv_created_by_unprivileged_user, unprivileged_client,
+    namespace,
+    blank_dv_created_by_admin_user,
+    unprivileged_client,
 ):
     with pytest.raises(
         ApiException,
@@ -33,12 +44,12 @@ def test_fail_to_vmexport_with_unprivileged_client_no_permissions(
     ):
         with VirtualMachineExport(
             name="vmexport-unprivileged",
-            namespace=blank_dv_created_by_unprivileged_user.namespace,
+            namespace=namespace.name,
             client=unprivileged_client,
             source={
                 "apiGroup": "",
                 "kind": PersistentVolumeClaim.kind,
-                "name": blank_dv_created_by_unprivileged_user.name,
+                "name": blank_dv_created_by_admin_user.name,
             },
         ) as vmexport:
             assert not vmexport, "VMExport created by unprivileged client"
@@ -61,14 +72,14 @@ def test_vmexport_snapshot_manifests(
 @pytest.mark.s390x
 @pytest.mark.polarion("CNV-11597")
 def test_virtctl_vmexport_unprivileged(
-    vmexport_download_path, blank_dv_created_by_unprivileged_user, virtctl_unprivileged_client
+    vmexport_download_path, blank_dv_created_by_specific_user, virtctl_unprivileged_client
 ):
     return_code, out, err = run_virtctl_command(
         command=shlex.split(
-            f"vmexport download test-pvc-export-unprivileged --pvc={blank_dv_created_by_unprivileged_user.name} "
+            f"vmexport download test-pvc-export-unprivileged --pvc={blank_dv_created_by_specific_user.name} "
             f"--output {vmexport_download_path}"
         ),
-        namespace=blank_dv_created_by_unprivileged_user.namespace,
+        namespace=blank_dv_created_by_specific_user.namespace,
         verify_stderr=False,
     )
     assert return_code, f"Failed to run virtctl vmexport by unprivileged user, out: {out}, err: {err}."
