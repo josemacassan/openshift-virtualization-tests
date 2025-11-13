@@ -6,6 +6,7 @@ import io
 import logging
 import shlex
 from contextlib import contextmanager
+from typing import Generator, Any
 
 import yaml
 from kubernetes.dynamic import DynamicClient
@@ -47,7 +48,7 @@ def create_blank_dv_by_specific_user(
     client: DynamicClient,
     namespace_name: str,
     dv_name: str,
-):
+) -> Generator[Any, None, None]:
     with create_dv(
         source="blank",
         dv_name=dv_name,
