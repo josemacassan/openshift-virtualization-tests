@@ -6,7 +6,7 @@ import io
 import logging
 import shlex
 from contextlib import contextmanager
-from typing import Generator, Any
+from typing import Any, Generator
 
 import yaml
 from kubernetes.dynamic import DynamicClient
