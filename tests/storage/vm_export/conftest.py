@@ -167,6 +167,22 @@ def blank_dv_created_by_specific_user(namespace, unprivileged_client):
 
 
 @pytest.fixture()
+def blank_dv_created_by_admin_user(namespace, admin_client):
+    with create_dv(
+        source="blank",
+        dv_name="blank-dv-by-admin-user",
+        namespace=namespace.name,
+        size="1Gi",
+        storage_class=py_config["default_storage_class"],
+        consume_wffc=False,
+        bind_immediate=True,
+        client=admin_client,
+    ) as dv:
+        dv.wait_for_dv_success(timeout=TIMEOUT_1MIN)
+        yield dv
+
+
+@pytest.fixture()
 def virtctl_unprivileged_client(admin_client):
     current_user = check_output("oc whoami", shell=True).decode().strip()
     login_with_user_password(
