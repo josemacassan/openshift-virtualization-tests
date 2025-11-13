@@ -6,9 +6,9 @@ import io
 import logging
 import shlex
 from contextlib import contextmanager
-from typing import Any
 
 import yaml
+from kubernetes.dynamic import DynamicClient
 from ocp_resources.virtual_machine import VirtualMachine
 from pyhelper_utils.shell import run_command
 from pytest_testconfig import config as py_config
@@ -44,11 +44,10 @@ def get_manifest_url(vmexport_external_links, manifest_type):
 
 @contextmanager
 def create_blank_dv_by_specific_user(
-    client: Any,
+    client: DynamicClient,
     namespace_name: str,
     dv_name: str,
 ):
-
     with create_dv(
         source="blank",
         dv_name=dv_name,
