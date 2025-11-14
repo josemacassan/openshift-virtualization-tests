@@ -6,10 +6,15 @@ import io
 import logging
 import shlex
 from contextlib import contextmanager
+<<<<<<< HEAD
 from typing import Any, Generator
+=======
+from typing import Generator
+>>>>>>> a834433 (Add DataVolume to Generator.)
 
 import yaml
 from kubernetes.dynamic import DynamicClient
+from ocp_resources.datavolume import DataVolume
 from ocp_resources.virtual_machine import VirtualMachine
 from pyhelper_utils.shell import run_command
 from pytest_testconfig import config as py_config
@@ -48,7 +53,7 @@ def create_blank_dv_by_specific_user(
     client: DynamicClient,
     namespace_name: str,
     dv_name: str,
-) -> Generator[Any, None, None]:
+) -> Generator[DataVolume]:
     with create_dv(
         source="blank",
         dv_name=dv_name,
