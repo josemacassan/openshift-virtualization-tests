@@ -49,7 +49,7 @@ def create_blank_dv_by_specific_user(
     client: DynamicClient,
     namespace_name: str,
     dv_name: str,
-) -> Generator[DataVolume]:
+) -> Generator[DataVolume, None, None]:
     with create_dv(
         source="blank",
         dv_name=dv_name,
