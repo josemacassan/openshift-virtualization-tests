@@ -270,8 +270,8 @@ class TestHotPlugWithSerialPersist:
 @pytest.mark.tier3
 class TestHotPlugWindows:
     @pytest.mark.xfail(
-    reason=f"{QUARANTINED}: Fails most likely because it skipped unpriviledged client in the automation. Probably system issue. CNV-72980",
-    run=False,
+        reason=f"{QUARANTINED}: Fails most likely because it skipped unpriviledged client in the automation. Probably system issue. CNV-72980",
+        run=False,
     )
     @pytest.mark.polarion("CNV-6525")
     @pytest.mark.dependency(name="test_windows_hotplug")
