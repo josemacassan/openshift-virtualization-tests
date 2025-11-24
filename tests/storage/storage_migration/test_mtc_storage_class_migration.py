@@ -312,7 +312,10 @@ class TestStorageClassMigrationWindowsWithVTPM:
         depends=[f"{TESTS_CLASS_NAME_WINDOWS}::test_vm_storage_class_migration_windows_vm_with_vtpm"]
     )
     @pytest.mark.polarion("CNV-11515")
-    @pytest.mark.xfail(reason=f"{QUARANTINED}: Windows VM not deleted on time in Teardown. CNV-73198")
+    @pytest.mark.xfail(
+        reason=f"{QUARANTINED}: Windows VM not deleted on time in Teardown. CNV-73198",
+        run=False,
+    )
     def test_migrate_windows_vm_with_vtpm_after_storage_migration(
         self,
         source_storage_class,
