@@ -521,6 +521,7 @@ def register_vm_to_rhsm(vm):
         ),
     )
 
+
 @contextmanager
 def create_rhel_vm(
     storage_class: str,
