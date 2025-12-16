@@ -17,7 +17,7 @@ from tests.storage.hpp.utils import (
     VM_NAME,
     edit_hpp_with_node_selector,
 )
-from utilities.constants import NODE_STR, TIMEOUT_1MIN, TIMEOUT_5MIN
+from utilities.constants import NODE_STR, QUARANTINED, TIMEOUT_1MIN, TIMEOUT_5MIN
 from utilities.storage import check_disk_count_in_vm
 
 LOGGER = logging.getLogger(__name__)
@@ -64,7 +64,10 @@ def test_create_dv_on_right_node_with_node_placement(
     # The VM should be created on the node that have the node labels
     assert cirros_vm_for_node_placement_tests.vmi.node.name == worker_node1.name
 
-
+@pytest.mark.xfail(
+    reason=f"{QUARANTINED}: Test needs investigation for flakiness, CNV-XXXXX",
+    run=False,
+)
 @pytest.mark.post_upgrade
 @pytest.mark.parametrize(
     ("updated_hpp_with_node_placement", "cirros_vm_for_node_placement_tests"),
