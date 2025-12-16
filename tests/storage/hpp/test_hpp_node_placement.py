@@ -64,6 +64,7 @@ def test_create_dv_on_right_node_with_node_placement(
     # The VM should be created on the node that have the node labels
     assert cirros_vm_for_node_placement_tests.vmi.node.name == worker_node1.name
 
+
 @pytest.mark.xfail(
     reason=f"{QUARANTINED}: Flaky test, failureonly reproduced in full tier2 run; CNV-75138",
     run=False,
