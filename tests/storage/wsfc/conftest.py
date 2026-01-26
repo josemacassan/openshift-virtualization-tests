@@ -19,6 +19,7 @@ LOGGER = logging.getLogger(__name__)
 def wsfc_namespace(admin_client):
     """Create a dedicated namespace for WSFC tests."""
     from utilities.infra import create_ns
+    from ocp_resources.namespace import Namespace
     
     # Check if namespace already exists
     existing_ns = Namespace(name="wsfc-test", client=admin_client)
