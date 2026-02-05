@@ -440,10 +440,10 @@ def test_certconfigmap_missing_or_wrong_cm(data_volume_multi_storage_scope_funct
 )
 @pytest.mark.s390x
 def test_successful_concurrent_blank_disk_import(
-    dv_list_created_sequentially,
-    vm_list_created_sequentially,
+    blank_disk_dv_list,
+    blank_disk_vm_list,
 ):
-    for vm in vm_list_created_sequentially:
+    for vm in blank_disk_vm_list:
         running_vm(vm=vm)
 
 
