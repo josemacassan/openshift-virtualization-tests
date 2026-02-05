@@ -136,12 +136,12 @@ def running_pod_with_dv_pvc(
 
 
 @pytest.fixture()
-def dv_list_created_by_multiprocess(
-    unprivileged_client, namespace, storage_class_name_scope_module, number_of_processes
+def dv_list_created_sequentially(
+    unprivileged_client, namespace, storage_class_name_scope_module, number_of_dvs
 ):
+    """Create DataVolumes sequentially instead of concurrently."""
     dvs_list = []
-    processes = {}
-    for i in range(number_of_processes):
+    for i in range(number_of_dvs):
         dv = DataVolume(
             client=unprivileged_client,
             source="blank",
@@ -151,22 +151,20 @@ def dv_list_created_by_multiprocess(
             storage_class=storage_class_name_scope_module,
             api_name="storage",
         )
-        dv_process = ProcessWithException(target=dv.create)
-        dv_process.start()
-        processes[dv.name] = dv_process
+        dv.create()
         dvs_list.append(dv)
-    wait_for_processes_exit_successfully(processes=processes, timeout=TIMEOUT_1MIN)
     yield dvs_list
-    clean_up_multiprocess(processes=processes, object_list=dvs_list)
+    for dv in dvs_list:
+        dv.clean_up()
 
 
 @pytest.fixture()
-def vm_list_created_by_multiprocess(
-    unprivileged_client, dv_list_created_by_multiprocess, storage_class_name_scope_module
+def vm_list_created_sequentially(
+    unprivileged_client, dv_list_created_sequentially, storage_class_name_scope_module
 ):
+    """Create VMs sequentially from DVs and start them one by one."""
     vms_list = []
-    processes = {}
-    for dv in dv_list_created_by_multiprocess:
+    for dv in dv_list_created_sequentially:
         if sc_volume_binding_mode_is_wffc(sc=storage_class_name_scope_module, client=unprivileged_client):
             dv.wait_for_status(status=DataVolume.Status.PENDING_POPULATION, timeout=TIMEOUT_1MIN)
         else:
@@ -181,15 +179,11 @@ def vm_list_created_by_multiprocess(
             memory_guest=Images.Fedora.DEFAULT_MEMORY_SIZE,
         )
         vm.deploy()
+        vm.start()  
         vms_list.append(vm)
-    for vm in vms_list:
-        vm_process = ProcessWithException(target=vm.start)
-        vm_process.start()
-        processes[vm.name] = vm_process
-
-    wait_for_processes_exit_successfully(processes=processes, timeout=TIMEOUT_4MIN)
     yield vms_list
-    clean_up_multiprocess(processes=processes, object_list=vms_list)
+    for vm in vms_list:
+        vm.clean_up()
 
 
 @pytest.fixture()
