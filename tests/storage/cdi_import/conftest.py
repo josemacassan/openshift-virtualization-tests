@@ -14,20 +14,16 @@ from tests.storage.constants import (
     QUAY_FEDORA_CONTAINER_IMAGE,
 )
 from tests.storage.utils import (
-    clean_up_multiprocess,
     create_pod_for_pvc,
     get_file_url,
-    wait_for_processes_exit_successfully,
 )
 from utilities.constants import (
     LINUX_BRIDGE,
     OS_FLAVOR_FEDORA,
     REGISTRY_STR,
     TIMEOUT_1MIN,
-    TIMEOUT_4MIN,
     Images,
 )
-from utilities.exceptions import ProcessWithException
 from utilities.infra import NON_EXIST_URL
 from utilities.network import network_device, network_nad
 from utilities.storage import create_dv, sc_volume_binding_mode_is_wffc
@@ -136,9 +132,7 @@ def running_pod_with_dv_pvc(
 
 
 @pytest.fixture()
-def dv_list_created_sequentially(
-    unprivileged_client, namespace, storage_class_name_scope_module, number_of_dvs
-):
+def dv_list_created_sequentially(unprivileged_client, namespace, storage_class_name_scope_module, number_of_dvs):
     """Create DataVolumes sequentially instead of concurrently."""
     dvs_list = []
     for i in range(number_of_dvs):
@@ -159,9 +153,7 @@ def dv_list_created_sequentially(
 
 
 @pytest.fixture()
-def vm_list_created_sequentially(
-    unprivileged_client, dv_list_created_sequentially, storage_class_name_scope_module
-):
+def vm_list_created_sequentially(unprivileged_client, dv_list_created_sequentially, storage_class_name_scope_module):
     """Create VMs sequentially from DVs and start them one by one."""
     vms_list = []
     for dv in dv_list_created_sequentially:
@@ -179,7 +171,7 @@ def vm_list_created_sequentially(
             memory_guest=Images.Fedora.DEFAULT_MEMORY_SIZE,
         )
         vm.deploy()
-        vm.start()  
+        vm.start()
         vms_list.append(vm)
     yield vms_list
     for vm in vms_list:
