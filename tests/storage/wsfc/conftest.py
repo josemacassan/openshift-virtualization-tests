@@ -34,6 +34,19 @@ def wsfc_namespace(admin_client):
             teardown=True,
         )
 
+
+@pytest.fixture(scope="module")
+def trident_iscsi_storage_class(admin_client):
+    """Create Trident iSCSI StorageClass for WSFC tests."""
+    with create_trident_iscsi_storage_class(
+        name="trident-csi-iscsi",
+        client=admin_client,
+        is_default_class=True,
+        is_default_virt_class=True,
+        backend_type="ontap-san",
+    ) as sc:
+        yield sc
+
 @pytest.fixture(scope="module")
 def artifactory_secret_wsfc(wsfc_namespace):
     """Create artifactory secret for WSFC namespace."""
@@ -102,53 +115,6 @@ def l2_cluster_nad2(unprivileged_client):
         yield nad
 
 
-@pytest.fixture(scope="module")
-def trident_iscsi_storage_class(unprivileged_client):
-    """Create Trident iSCSI StorageClass for WSFC tests."""
-    with create_trident_iscsi_storage_class(
-        name="trident-csi-iscsi",
-        client=unprivileged_client,
-        is_default_class=True,
-        is_default_virt_class=True,
-        backend_type="ontap-san",
-    ) as sc:
-        yield sc
 
-
-@pytest.fixture(scope="module")
-def l2_cluster_nad1(unprivileged_client):
-    """Create first L2 cluster NAD for WSFC tests in default namespace."""
-    with create_l2_cluster_nad(
-        name="l2-cluster-net1",
-        namespace="default",
-        client=unprivileged_client,
-        config_name="l2-cluster-net1",
-    ) as nad:
-        yield nad
-
-
-@pytest.fixture(scope="module")
-def l2_cluster_nad2(unprivileged_client):
-    """Create second L2 cluster NAD for WSFC tests in default namespace."""
-    with create_l2_cluster_nad(
-        name="l2-cluster-net2",
-        namespace="default",
-        client=unprivileged_client,
-        config_name="l2-cluster-net2",
-    ) as nad:
-        yield nad
-
-
-@pytest.fixture(scope="module")
-def trident_iscsi_storage_class(unprivileged_client):
-    """Create Trident iSCSI StorageClass for WSFC tests."""
-    with create_trident_iscsi_storage_class(
-        name="trident-csi-iscsi",
-        client=unprivileged_client,
-        is_default_class=True,
-        is_default_virt_class=True,
-        backend_type="ontap-san",
-    ) as sc:
-        yield sc
 
 
