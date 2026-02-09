@@ -132,7 +132,7 @@ def running_pod_with_dv_pvc(
 
 
 @pytest.fixture()
-def blank_disk_dv_list(unprivileged_client, namespace, storage_class_name_scope_module, number_of_dvs):
+def created_blank_dv_list(unprivileged_client, namespace, storage_class_name_scope_module, number_of_dvs):
     """Create DataVolumes sequentially instead of concurrently."""
     dvs_list = []
     for dv_index in range(number_of_dvs):
@@ -153,10 +153,10 @@ def blank_disk_dv_list(unprivileged_client, namespace, storage_class_name_scope_
 
 
 @pytest.fixture()
-def blank_disk_vm_list(unprivileged_client, blank_disk_dv_list, storage_class_name_scope_module):
+def created_vm_list(unprivileged_client, created_blank_dv_list, storage_class_name_scope_module):
     """Create VMs sequentially from DVs and start them one by one."""
     vms_list = []
-    for dv in blank_disk_dv_list:
+    for dv in created_blank_dv_list:
         if sc_volume_binding_mode_is_wffc(sc=storage_class_name_scope_module, client=unprivileged_client):
             dv.wait_for_status(status=DataVolume.Status.PENDING_POPULATION, timeout=TIMEOUT_1MIN)
         else:
@@ -171,8 +171,8 @@ def blank_disk_vm_list(unprivileged_client, blank_disk_dv_list, storage_class_na
             memory_guest=Images.Fedora.DEFAULT_MEMORY_SIZE,
         )
         vm.deploy()
-        vm.start()
         vms_list.append(vm)
+        vm.start()
     yield vms_list
     for vm in vms_list:
         vm.clean_up()
