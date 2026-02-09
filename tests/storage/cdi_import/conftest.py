@@ -133,49 +133,52 @@ def running_pod_with_dv_pvc(
 
 @pytest.fixture()
 def created_blank_dv_list(unprivileged_client, namespace, storage_class_name_scope_module, number_of_dvs):
-    """Create DataVolumes sequentially instead of concurrently."""
     dvs_list = []
-    for dv_index in range(number_of_dvs):
-        dv = DataVolume(
-            client=unprivileged_client,
-            source="blank",
-            name=f"dv-{dv_index}",
-            namespace=namespace.name,
-            size=Images.Fedora.DEFAULT_DV_SIZE,
-            storage_class=storage_class_name_scope_module,
-            api_name="storage",
-        )
-        dv.create()
-        dvs_list.append(dv)
-    yield dvs_list
-    for dv in dvs_list:
-        dv.clean_up()
+    try:
+        for dv_index in range(number_of_dvs):
+            dv = DataVolume(
+                client=unprivileged_client,
+                source="blank",
+                name=f"dv-{dv_index}",
+                namespace=namespace.name,
+                size=Images.Fedora.DEFAULT_DV_SIZE,
+                storage_class=storage_class_name_scope_module,
+                api_name="storage",
+            )
+            dv.create()
+            dvs_list.append(dv)
+        yield dvs_list
+    finally:
+        for dv in dvs_list:
+            dv.clean_up()
 
 
 @pytest.fixture()
 def created_vm_list(unprivileged_client, created_blank_dv_list, storage_class_name_scope_module):
     """Create VMs sequentially from DVs and start them one by one."""
     vms_list = []
-    for dv in created_blank_dv_list:
-        if sc_volume_binding_mode_is_wffc(sc=storage_class_name_scope_module, client=unprivileged_client):
-            dv.wait_for_status(status=DataVolume.Status.PENDING_POPULATION, timeout=TIMEOUT_1MIN)
-        else:
-            dv.wait_for_dv_success(timeout=TIMEOUT_1MIN)
-        vm = VirtualMachineForTests(
-            client=unprivileged_client,
-            name=f"vm-{dv.name}",
-            namespace=dv.namespace,
-            os_flavor=OS_FLAVOR_FEDORA,
-            data_volume=dv,
-            image=Images.Fedora.FEDORA_CONTAINER_IMAGE,
-            memory_guest=Images.Fedora.DEFAULT_MEMORY_SIZE,
-        )
-        vm.deploy()
-        vms_list.append(vm)
-        vm.start()
-    yield vms_list
-    for vm in vms_list:
-        vm.clean_up()
+    try:
+        for dv in created_blank_dv_list:
+            if sc_volume_binding_mode_is_wffc(sc=storage_class_name_scope_module, client=unprivileged_client):
+                dv.wait_for_status(status=DataVolume.Status.PENDING_POPULATION, timeout=TIMEOUT_1MIN)
+            else:
+                dv.wait_for_dv_success(timeout=TIMEOUT_1MIN)
+            vm = VirtualMachineForTests(
+                client=unprivileged_client,
+                name=f"vm-{dv.name}",
+                namespace=dv.namespace,
+                os_flavor=OS_FLAVOR_FEDORA,
+                data_volume=dv,
+                image=Images.Fedora.FEDORA_CONTAINER_IMAGE,
+                memory_guest=Images.Fedora.DEFAULT_MEMORY_SIZE,
+            )
+            vm.deploy()
+            vms_list.append(vm)
+            vm.start()
+        yield vms_list
+    finally:
+        for vm in vms_list:
+            vm.clean_up()
 
 
 @pytest.fixture()
