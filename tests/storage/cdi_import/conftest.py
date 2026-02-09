@@ -172,7 +172,7 @@ def created_vm_list(unprivileged_client, created_blank_dv_list, storage_class_na
                 image=Images.Fedora.FEDORA_CONTAINER_IMAGE,
                 memory_guest=Images.Fedora.DEFAULT_MEMORY_SIZE,
             )
-            vm.deploy()
+            vm.deploy(wait=True)
             vms_list.append(vm)
             vm.start()
         yield vms_list
