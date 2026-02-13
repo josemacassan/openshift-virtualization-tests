@@ -2,6 +2,7 @@
 CDI Import
 """
 
+import gc
 import logging
 
 import pytest
@@ -179,6 +180,7 @@ def created_vm_list(unprivileged_client, created_blank_dv_list, storage_class_na
     finally:
         for vm in vms_list:
             vm.clean_up()
+        gc.collect()
 
 
 @pytest.fixture()
