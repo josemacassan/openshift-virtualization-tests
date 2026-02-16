@@ -18,7 +18,6 @@ from utilities.constants import (
     OS_FLAVOR_CIRROS,
     TIMEOUT_2MIN,
     TIMEOUT_4MIN,
-    TIMEOUT_10SEC,
     TIMEOUT_30SEC,
     Images,
 )
