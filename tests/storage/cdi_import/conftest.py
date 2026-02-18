@@ -180,6 +180,7 @@ def created_vm_list(unprivileged_client, created_blank_dv_list, storage_class_na
     finally:
         for vm in vms_list:
             vm.clean_up()
+        # Force garbage collection to prevent memory leaks due to paramiko/paramiko#2568
         gc.collect()
 
 
