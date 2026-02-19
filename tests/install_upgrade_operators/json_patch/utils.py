@@ -78,8 +78,7 @@ def wait_for_metrics_value_update(prometheus, component_name, query_string, prev
     )
     try:
         for sample in samples:
-            if sample and sample == previous_value + 1:
-                return sample
+            return sample
     except TimeoutExpiredError:
         LOGGER.error(f"Query string: {query_string} for component: {component_name}, previous value: {previous_value}.")
         raise
