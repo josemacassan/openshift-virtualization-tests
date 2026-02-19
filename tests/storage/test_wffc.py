@@ -15,10 +15,7 @@ from ocp_resources.virtual_machine_instance import VirtualMachineInstance
 from tests.storage.constants import CIRROS_QCOW2_IMG
 from tests.storage.utils import create_vm_from_dv, upload_image_to_dv, upload_token_request
 from utilities.constants import (
-<<<<<<< HEAD
     OS_FLAVOR_CIRROS,
-=======
->>>>>>> f82021ac ([Storage] Unquarantine and fix test_wffc_create_vm_from_uploaded_dv_via_virtctl (#3889))
     TIMEOUT_2MIN,
     TIMEOUT_4MIN,
     TIMEOUT_30SEC,
