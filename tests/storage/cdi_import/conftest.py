@@ -15,7 +15,6 @@ from tests.storage.constants import (
     QUAY_FEDORA_CONTAINER_IMAGE,
 )
 from tests.storage.utils import (
-    clean_up_multiprocess,
     create_cirros_dv,
     create_pod_for_pvc,
     get_file_url,
@@ -130,7 +129,6 @@ def running_pod_with_dv_pvc(
         yield pod
 
 
-
 @pytest.fixture(scope="module")
 def cirros_dv_unprivileged(
     namespace,
@@ -197,7 +195,7 @@ def created_vm_list(unprivileged_client, created_blank_dv_list, storage_class_na
         # Force garbage collection to prevent memory leaks due to paramiko/paramiko#2568
         gc.collect()
 
-        
+
 @pytest.fixture()
 def dvs_and_vms_from_public_registry(namespace, storage_class_name_scope_function):
     dvs = []
