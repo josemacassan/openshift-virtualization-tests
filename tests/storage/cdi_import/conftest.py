@@ -15,7 +15,6 @@ from tests.storage.constants import (
     QUAY_FEDORA_CONTAINER_IMAGE,
 )
 from tests.storage.utils import (
-    clean_up_multiprocess,
     create_cirros_dv,
     create_pod_for_pvc,
     get_file_url,
