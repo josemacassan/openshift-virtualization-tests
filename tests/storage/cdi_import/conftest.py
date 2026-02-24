@@ -129,7 +129,6 @@ def running_pod_with_dv_pvc(
         yield pod
 
 
-
 @pytest.fixture(scope="module")
 def cirros_dv_unprivileged(
     namespace,
@@ -196,7 +195,7 @@ def created_vm_list(unprivileged_client, created_blank_dv_list, storage_class_na
         # Force garbage collection to prevent memory leaks due to paramiko/paramiko#2568
         gc.collect()
 
-        
+
 @pytest.fixture()
 def dvs_and_vms_from_public_registry(namespace, storage_class_name_scope_function):
     dvs = []
