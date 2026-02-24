@@ -172,7 +172,7 @@ def created_vm_list(unprivileged_client, created_blank_dv_list, storage_class_na
     vms_list = []
     try:
         for dv in created_blank_dv_list:
-            if sc_volume_binding_mode_is_wffc(sc=storage_class_name_scope_module, client=unprivileged_client):
+            if sc_volume_binding_mode_is_wffc(sc=storage_class_name_scope_module):
                 dv.wait_for_status(status=DataVolume.Status.PENDING_POPULATION, timeout=TIMEOUT_1MIN)
             else:
                 dv.wait_for_dv_success(timeout=TIMEOUT_1MIN)
