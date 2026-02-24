@@ -111,6 +111,7 @@ def dv_from_http_import(
         size=request.param.get("size", DEFAULT_DV_SIZE),
         storage_class=storage_class_name_scope_module,
     ) as dv:
+        dv.pvc.wait()
         yield dv
 
 
@@ -126,6 +127,7 @@ def running_pod_with_dv_pvc(
         volume_mode=storage_class_matrix__module__[storage_class_name_scope_module]["volume_mode"],
     ) as pod:
         yield pod
+
 
 
 @pytest.fixture(scope="module")
@@ -171,7 +173,7 @@ def created_vm_list(unprivileged_client, created_blank_dv_list, storage_class_na
     vms_list = []
     try:
         for dv in created_blank_dv_list:
-            if sc_volume_binding_mode_is_wffc(sc=storage_class_name_scope_module, client=unprivileged_client):
+            if sc_volume_binding_mode_is_wffc(sc=storage_class_name_scope_module):
                 dv.wait_for_status(status=DataVolume.Status.PENDING_POPULATION, timeout=TIMEOUT_1MIN)
             else:
                 dv.wait_for_dv_success(timeout=TIMEOUT_1MIN)
@@ -194,7 +196,7 @@ def created_vm_list(unprivileged_client, created_blank_dv_list, storage_class_na
         # Force garbage collection to prevent memory leaks due to paramiko/paramiko#2568
         gc.collect()
 
-
+        
 @pytest.fixture()
 def dvs_and_vms_from_public_registry(namespace, storage_class_name_scope_function):
     dvs = []
