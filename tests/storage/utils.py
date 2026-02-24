@@ -453,5 +453,3 @@ def assert_use_populator(pvc, storage_class, cluster_csi_drivers_names):
         StorageClass(name=storage_class).instance.get("provisioner") in cluster_csi_drivers_names
     )
     assert pvc.use_populator == expected_use_populator_value
-
-
