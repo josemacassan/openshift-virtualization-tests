@@ -13,16 +13,15 @@ from ocp_resources.virtual_machine_restore import VirtualMachineRestore
 from pyhelper_utils.shell import run_ssh_commands
 from timeout_sampler import TimeoutExpiredError, TimeoutSampler
 
+from tests.storage.online_resize.constants import (
+    RHEL_DV_SIZE,
+    STORED_FILENAME,
+)
 from utilities.constants import TIMEOUT_4MIN
 from utilities.storage import create_dv
 from utilities.virt import running_vm
 
 LOGGER = logging.getLogger(__name__)
-SMALLEST_POSSIBLE_EXPAND = "1Gi"
-STORED_FILENAME = "random_data_file"
-
-# Increase DV size to 40Gi because source storage size should be larger than the target storage size
-RHEL_DV_SIZE = "40Gi"
 
 
 @contextmanager
@@ -102,11 +101,20 @@ def expand_pvc(dv, size_change):
     })
 
 
-def get_resize_count(vm):
-    commands = shlex.split("sudo dmesg | grep -c 'new size' || true")
-    result = run_ssh_commands(host=vm.ssh_exec, commands=commands)[0]
+def get_block_device_size_bytes(vm, device="/dev/vda"):
+    """
+    Get block device size in bytes using lsblk.
 
-    return int(result)
+    Args:
+        vm: VM to run command on
+        device: Block device to check (e.g., /dev/vda)
+
+    Returns:
+        int: Block device size in bytes
+    """
+    commands = shlex.split(f"lsblk -b -d -n -o SIZE {device}")
+    result = run_ssh_commands(host=vm.ssh_exec, commands=commands)[0]
+    return int(result.strip())
 
 
 def check_file_unchanged(orig_cksum, vm):
@@ -118,26 +126,39 @@ def check_file_unchanged(orig_cksum, vm):
 
 @contextmanager
 def wait_for_resize(vm, count=1):
-    starting_count = get_resize_count(vm=vm)
-    desired_count = starting_count + count
+    """
+    Captures block device size before block executes, waits for it to increase after block exits.
+
+    Uses lsblk to verify the block device size increased, which directly reflects the PVC expansion.
+
+    Args:
+        vm: VM to monitor for block device size change
+        count: Expected number of resize operations (used for logging)
+
+    Raises:
+        TimeoutExpiredError: If block device size doesn't increase
+    """
+    starting_size = get_block_device_size_bytes(vm=vm)
     yield
     samples = TimeoutSampler(
         wait_timeout=TIMEOUT_4MIN,
         sleep=5,
-        func=get_resize_count,
+        func=get_block_device_size_bytes,
         vm=vm,
     )
     try:
         for sample in samples:
-            current_resize_count = sample
+            current_size = sample
             LOGGER.info(
-                f"Current resize count is {current_resize_count}. Waiting until resize count is {desired_count}"
+                f"Current block device size: {current_size} bytes. "
+                f"Waiting for size to exceed {starting_size} bytes"
             )
-            if current_resize_count in (desired_count, desired_count + 1):
+            if current_size > starting_size:
+                LOGGER.info(f"Block device expanded from {starting_size} to {current_size} bytes")
                 break
     except TimeoutExpiredError:
-        dmesg = run_ssh_commands(host=vm.ssh_exec, commands=shlex.split("dmesg"))[0]
-        LOGGER.error(f"Failed to reach resize count {desired_count}.\ndmesg:\n{dmesg}")
+        lsblk_output = run_ssh_commands(host=vm.ssh_exec, commands=shlex.split("lsblk -b"))[0]
+        LOGGER.error(f"Block device size did not increase.\nlsblk -b:\n{lsblk_output}")
         raise
 
 
