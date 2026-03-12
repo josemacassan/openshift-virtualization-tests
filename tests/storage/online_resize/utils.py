@@ -125,7 +125,7 @@ def check_file_unchanged(orig_cksum, vm):
 
 
 @contextmanager
-def wait_for_resize(vm, count=1):
+def wait_for_resize(vm):
     """
     Captures block device size before block executes, waits for it to increase after block exits.
 
@@ -133,7 +133,6 @@ def wait_for_resize(vm, count=1):
 
     Args:
         vm: VM to monitor for block device size change
-        count: Expected number of resize operations (used for logging)
 
     Raises:
         TimeoutExpiredError: If block device size doesn't increase
@@ -150,8 +149,7 @@ def wait_for_resize(vm, count=1):
         for sample in samples:
             current_size = sample
             LOGGER.info(
-                f"Current block device size: {current_size} bytes. "
-                f"Waiting for size to exceed {starting_size} bytes"
+                f"Current block device size: {current_size} bytes. Waiting for size to exceed {starting_size} bytes"
             )
             if current_size > starting_size:
                 LOGGER.info(f"Block device expanded from {starting_size} to {current_size} bytes")
