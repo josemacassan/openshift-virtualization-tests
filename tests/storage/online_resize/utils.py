@@ -127,47 +127,39 @@ def check_file_unchanged(orig_cksum, vm):
 @contextmanager
 def wait_for_resize(vm, count=1):
     """
-    Captures block device sizes before block executes, waits for them to increase after block exits.
+    Captures block device size before block executes, waits for it to increase after block exits.
 
-    Uses lsblk to verify block device sizes increased, which directly reflects PVC expansion.
-    Verifies devices /dev/vda through /dev/vd{a+count-1} based on the count parameter.
+    Uses lsblk to verify the block device size increased, which directly reflects the PVC expansion.
 
     Args:
-        vm: VM to monitor for block device size changes
-        count: Number of block devices to verify (1=/dev/vda, 2=/dev/vda+/dev/vdb, etc.)
+        vm: VM to monitor for block device size change
+        count: Expected number of resize operations (used for logging)
 
     Raises:
-        TimeoutExpiredError: If any block device size doesn't increase
+        TimeoutExpiredError: If block device size doesn't increase
     """
-    devices = [f"/dev/vd{chr(ord('a') + i)}" for i in range(count)]
-    starting_sizes = {device: get_block_device_size_bytes(vm=vm, device=device) for device in devices}
-    LOGGER.info(f"Initial block device sizes: {starting_sizes}")
-
+    starting_size = get_block_device_size_bytes(vm=vm)
     yield
-
-    for device in devices:
-        starting_size = starting_sizes[device]
-        samples = TimeoutSampler(
-            wait_timeout=TIMEOUT_4MIN,
-            sleep=5,
-            func=get_block_device_size_bytes,
-            vm=vm,
-            device=device,
-        )
-        try:
-            for sample in samples:
-                current_size = sample
-                LOGGER.info(
-                    f"Device {device}: current size {current_size} bytes, "
-                    f"waiting for size to exceed {starting_size} bytes"
-                )
-                if current_size > starting_size:
-                    LOGGER.info(f"Device {device} expanded from {starting_size} to {current_size} bytes")
-                    break
-        except TimeoutExpiredError:
-            lsblk_output = run_ssh_commands(host=vm.ssh_exec, commands=shlex.split("lsblk -b"))[0]
-            LOGGER.error(f"Device {device} size did not increase.\nlsblk -b:\n{lsblk_output}")
-            raise
+    samples = TimeoutSampler(
+        wait_timeout=TIMEOUT_4MIN,
+        sleep=5,
+        func=get_block_device_size_bytes,
+        vm=vm,
+    )
+    try:
+        for sample in samples:
+            current_size = sample
+            LOGGER.info(
+                f"Current block device size: {current_size} bytes. "
+                f"Waiting for size to exceed {starting_size} bytes"
+            )
+            if current_size > starting_size:
+                LOGGER.info(f"Block device expanded from {starting_size} to {current_size} bytes")
+                break
+    except TimeoutExpiredError:
+        lsblk_output = run_ssh_commands(host=vm.ssh_exec, commands=shlex.split("lsblk -b"))[0]
+        LOGGER.error(f"Block device size did not increase.\nlsblk -b:\n{lsblk_output}")
+        raise
 
 
 @contextmanager
