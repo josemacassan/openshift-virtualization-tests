@@ -80,7 +80,7 @@ def test_simultaneous_disk_expand(
     second_rhel_dv_for_online_resize,
     running_rhel_vm_with_second_dv,
 ):
-    with wait_for_resize(vm=running_rhel_vm_with_second_dv):
+    with wait_for_resize(vm=running_rhel_vm_with_second_dv, devices=("/dev/vda", "/dev/vdc")):
         expand_pvc(dv=rhel_dv_for_online_resize, size_change=SMALLEST_POSSIBLE_EXPAND)
         expand_pvc(dv=second_rhel_dv_for_online_resize, size_change=SMALLEST_POSSIBLE_EXPAND)
 
