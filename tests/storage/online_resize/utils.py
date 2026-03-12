@@ -151,9 +151,7 @@ def wait_for_resize(vm, devices=("/dev/vda",)):
         try:
             for sample in samples:
                 current_size = sample
-                LOGGER.info(
-                    f"[{device}] Current size: {current_size} bytes. Waiting to exceed {starting_size} bytes"
-                )
+                LOGGER.info(f"[{device}] Current size: {current_size} bytes. Waiting to exceed {starting_size} bytes")
                 if current_size > starting_size:
                     LOGGER.info(f"[{device}] Expanded from {starting_size} to {current_size} bytes")
                     break
