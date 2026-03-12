@@ -150,8 +150,7 @@ def wait_for_resize(vm, count=1):
         for sample in samples:
             current_size = sample
             LOGGER.info(
-                f"Current block device size: {current_size} bytes. "
-                f"Waiting for size to exceed {starting_size} bytes"
+                f"Current block device size: {current_size} bytes. Waiting for size to exceed {starting_size} bytes"
             )
             if current_size > starting_size:
                 LOGGER.info(f"Block device expanded from {starting_size} to {current_size} bytes")
