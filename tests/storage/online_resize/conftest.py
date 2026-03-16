@@ -26,7 +26,7 @@ def xfail_if_storage_for_online_resize_does_not_support_snapshots(
     storage_class_matrix_online_resize_matrix__module__,
 ):
     sc_name = [*storage_class_matrix_online_resize_matrix__module__][0]
-    if not storage_class_matrix_online_resize_matrix__module__[sc_name].get("snapshot"):
+    if storage_class_matrix_online_resize_matrix__module__[sc_name].get("snapshot") is not True:
         pytest.xfail(f"Storage class for online resize '{sc_name}' doesn't support snapshots")
 
 

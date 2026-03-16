@@ -114,7 +114,8 @@ def test_disk_expand_then_clone_fail(
         for sample in TimeoutSampler(
             wait_timeout=TIMEOUT_1MIN,
             sleep=TIMEOUT_5SEC,
-            func=lambda: dv.get_condition_message(condition_type=DataVolume.Condition.Type.READY),
+            func=dv.get_condition_message,
+            condition_type=DataVolume.Condition.Type.READY,
         ):
             if (
                 sample
