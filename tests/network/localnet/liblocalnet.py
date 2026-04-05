@@ -22,6 +22,7 @@ from tests.network.libs.label_selector import LabelSelector
 
 LOCALNET_BR_EX_NETWORK = "localnet-br-ex-network"
 LOCALNET_OVS_BRIDGE_NETWORK = "localnet-ovs-network"
+LOCALNET_IPAM_LOGICAL_NETWORK = "localnet-ipam"
 LOCALNET_TEST_LABEL = {"test": "localnet"}
 LINK_STATE_UP = "up"
 LINK_STATE_DOWN = "down"
