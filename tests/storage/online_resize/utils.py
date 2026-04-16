@@ -7,11 +7,15 @@ Utility functions and context managers for online resize tests
 import logging
 import shlex
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
 
 import bitmath
 from ocp_resources.virtual_machine_restore import VirtualMachineRestore
 from pyhelper_utils.shell import run_ssh_commands
 from timeout_sampler import TimeoutExpiredError, TimeoutSampler
+
+if TYPE_CHECKING:
+    from utilities.virt import VirtualMachine
 
 from tests.storage.online_resize.constants import (
     RHEL_DV_SIZE,
@@ -101,7 +105,7 @@ def expand_pvc(dv, size_change):
     })
 
 
-def get_block_device_size_bytes(vm, device="/dev/vda"):
+def get_block_device_size_bytes(vm: "VirtualMachine", device: str = "/dev/vda") -> int:
     """
     Get block device size in bytes using lsblk.
 
