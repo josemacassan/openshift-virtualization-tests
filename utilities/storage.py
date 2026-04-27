@@ -673,20 +673,25 @@ def write_file(vm, filename, content, stop_vm=True):
 
 
 def run_command_on_vm_and_check_output(vm: "VirtualMachineForTests", command: str, expected_result: str) -> None:
-    """Run command on RHEL VM via SSH and verify expected result is in output.
+    """Run command on VM via SSH with retry and verify output matches expected result.
+    Command execution is retried with 2-minute timeout and 5-second intervals.
     Args:
         vm (VirtualMachineForTests): VM to run command on.
         command (str): Command to run.
         expected_result (str): Expected result to check.
     Raises:
-        AssertionError: If expected result is not in output.
+        AssertionError: If command output differs from expected result.
     """
     cmd_output = run_ssh_commands(
         host=vm.ssh_exec,
         commands=shlex.split(f"bash -c {shlex.quote(command)}"),
+        wait_timeout=TIMEOUT_2MIN,
+        sleep=TIMEOUT_5SEC,
     )[0].strip()
     expected_result = expected_result.strip()
-    assert expected_result in cmd_output, f"Expected '{expected_result}' in output '{cmd_output}'"
+    assert expected_result == cmd_output, (
+        f"Command output mismatch.\nCommand: {command}\nExpected: '{expected_result}'\nActual: '{cmd_output}'"
+    )
 
 
 def write_file_via_ssh(vm: "VirtualMachineForTests", filename: str, content: str) -> None:
