@@ -134,6 +134,127 @@ class TestStorageMigrationRetentionPolicy:
         """
 
 
+class TestStorageMigrationRetentionPolicyCombinedMode:
+    """
+    Test retentionPolicy functionality with combined online+offline migration mode.
+
+    Verifies retention policies when migrating both a running VM (online) and a stopped VM (offline)
+    in the same plan. Covers the online+offline migration mode required by the STP for default,
+    namespace-level, and plan-level retention policy scenarios.
+
+    STP Traceability: CNV-73509 (P0, P1)
+
+    Preconditions:
+      - Running VM (online migration) with source PVC/DataVolume
+      - Stopped VM (offline migration) with source PVC/DataVolume
+    """
+
+    @pytest.mark.polarion("CNV-TODO")
+    def test_retention_policy_default_behavior_combined_mode(self):
+        """
+        Test that default behavior is keepSource with combined online+offline migration.
+
+        STP Requirement: Default cleanup policy (P1)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume
+            - Stopped VM (offline migration) with source PVC/DataVolume
+
+        Steps:
+            1. Create MultiNamespaceVirtualMachineStorageMigrationPlan without retentionPolicy field
+            2. Wait for migration to complete successfully for both VMs
+            3. Verify both VMs are using new PVCs/DataVolumes
+            4. Check if source PVCs/DataVolumes exist for both VMs
+
+        Expected:
+            - Source PVCs/DataVolumes are kept for both VMs (default keepSource behavior)
+        """
+
+    @pytest.mark.polarion("CNV-TODO")
+    def test_namespace_level_retention_policy_delete_source_combined_mode(self):
+        """
+        Test namespace-level retentionPolicy=deleteSource with combined online+offline migration.
+
+        STP Requirement: Namespace-level cleanup policy (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume
+            - Stopped VM (offline migration) with source PVC/DataVolume
+
+        Steps:
+            1. Create MultiNamespaceVirtualMachineStorageMigrationPlan with namespace-level retentionPolicy=deleteSource
+            2. Wait for migration to complete successfully for both VMs
+            3. Verify both VMs are using new PVCs/DataVolumes
+            4. Check if source PVCs/DataVolumes exist for both VMs
+
+        Expected:
+            - Source PVCs/DataVolumes are deleted for both VMs
+        """
+
+    @pytest.mark.polarion("CNV-TODO")
+    def test_namespace_level_retention_policy_keep_source_combined_mode(self):
+        """
+        Test namespace-level retentionPolicy=keepSource with combined online+offline migration.
+
+        STP Requirement: Namespace-level cleanup policy (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume
+            - Stopped VM (offline migration) with source PVC/DataVolume
+
+        Steps:
+            1. Create MultiNamespaceVirtualMachineStorageMigrationPlan with namespace-level retentionPolicy=keepSource
+            2. Wait for migration to complete successfully for both VMs
+            3. Verify both VMs are using new PVCs/DataVolumes
+            4. Check if source PVCs/DataVolumes exist for both VMs
+
+        Expected:
+            - Source PVCs/DataVolumes are kept for both VMs
+        """
+
+    @pytest.mark.polarion("CNV-TODO")
+    def test_spec_level_retention_policy_delete_source_combined_mode(self):
+        """
+        Test plan-level retentionPolicy=deleteSource with combined online+offline migration.
+
+        STP Requirement: Plan-level cleanup policy (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume
+            - Stopped VM (offline migration) with source PVC/DataVolume
+
+        Steps:
+            1. Create MultiNamespaceVirtualMachineStorageMigrationPlan with plan-level retentionPolicy=deleteSource
+            2. Wait for migration to complete successfully for both VMs
+            3. Verify both VMs are using new PVCs/DataVolumes
+            4. Check if source PVCs/DataVolumes exist for both VMs
+
+        Expected:
+            - Source PVCs/DataVolumes are deleted for both VMs
+        """
+
+    @pytest.mark.polarion("CNV-TODO")
+    def test_spec_level_retention_policy_keep_source_combined_mode(self):
+        """
+        Test plan-level retentionPolicy=keepSource with combined online+offline migration.
+
+        STP Requirement: Plan-level cleanup policy (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume
+            - Stopped VM (offline migration) with source PVC/DataVolume
+
+        Steps:
+            1. Create MultiNamespaceVirtualMachineStorageMigrationPlan with plan-level retentionPolicy=keepSource
+            2. Wait for migration to complete successfully for both VMs
+            3. Verify both VMs are using new PVCs/DataVolumes
+            4. Check if source PVCs/DataVolumes exist for both VMs
+
+        Expected:
+            - Source PVCs/DataVolumes are kept for both VMs
+        """
+
+
 class TestStorageMigrationCombinedRetentionPolicy:
     """
     Test combination of retentionPolicy for MultiNamespaceVirtualMachineStorageMigrationPlan.
