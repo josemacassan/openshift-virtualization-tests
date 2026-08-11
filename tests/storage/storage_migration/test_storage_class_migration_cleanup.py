@@ -68,9 +68,11 @@ class TestStorageMigrationRetentionPolicy:
             2. Wait for migration to complete successfully
             3. Verify VM is using new PVC/DataVolume
             4. Check if source PVC/DataVolume exists
+            5. Verify MultiNamespaceVirtualMachineStorageMigrationPlan still exists
 
         Expected:
             - Source PVC/DataVolume is deleted
+            - MultiNamespaceVirtualMachineStorageMigrationPlan remains available after cleanup
         """
 
     @pytest.mark.polarion("CNV-16299")
@@ -88,9 +90,11 @@ class TestStorageMigrationRetentionPolicy:
             2. Wait for migration to complete successfully
             3. Verify VM is using new PVC/DataVolume
             4. Check if source PVC/DataVolume exists
+            5. Verify MultiNamespaceVirtualMachineStorageMigrationPlan still exists
 
         Expected:
             - Source PVC/DataVolume is deleted
+            - MultiNamespaceVirtualMachineStorageMigrationPlan remains available after cleanup
         """
 
     @pytest.mark.polarion("CNV-16301")
@@ -149,7 +153,7 @@ class TestStorageMigrationRetentionPolicyCombinedMode:
       - Stopped VM (offline migration) with source PVC/DataVolume
     """
 
-    @pytest.mark.polarion("CNV-TODO")
+    @pytest.mark.polarion("CNV-16558")
     def test_retention_policy_default_behavior_combined_mode(self):
         """
         Test that default behavior is keepSource with combined online+offline migration.
@@ -170,7 +174,7 @@ class TestStorageMigrationRetentionPolicyCombinedMode:
             - Source PVCs/DataVolumes are kept for both VMs (default keepSource behavior)
         """
 
-    @pytest.mark.polarion("CNV-TODO")
+    @pytest.mark.polarion("CNV-16559")
     def test_namespace_level_retention_policy_delete_source_combined_mode(self):
         """
         Test namespace-level retentionPolicy=deleteSource with combined online+offline migration.
@@ -186,12 +190,14 @@ class TestStorageMigrationRetentionPolicyCombinedMode:
             2. Wait for migration to complete successfully for both VMs
             3. Verify both VMs are using new PVCs/DataVolumes
             4. Check if source PVCs/DataVolumes exist for both VMs
+            5. Verify MultiNamespaceVirtualMachineStorageMigrationPlan still exists
 
         Expected:
             - Source PVCs/DataVolumes are deleted for both VMs
+            - MultiNamespaceVirtualMachineStorageMigrationPlan remains available after cleanup
         """
 
-    @pytest.mark.polarion("CNV-TODO")
+    @pytest.mark.polarion("CNV-16560")
     def test_namespace_level_retention_policy_keep_source_combined_mode(self):
         """
         Test namespace-level retentionPolicy=keepSource with combined online+offline migration.
@@ -212,7 +218,7 @@ class TestStorageMigrationRetentionPolicyCombinedMode:
             - Source PVCs/DataVolumes are kept for both VMs
         """
 
-    @pytest.mark.polarion("CNV-TODO")
+    @pytest.mark.polarion("CNV-16561")
     def test_spec_level_retention_policy_delete_source_combined_mode(self):
         """
         Test plan-level retentionPolicy=deleteSource with combined online+offline migration.
@@ -228,12 +234,14 @@ class TestStorageMigrationRetentionPolicyCombinedMode:
             2. Wait for migration to complete successfully for both VMs
             3. Verify both VMs are using new PVCs/DataVolumes
             4. Check if source PVCs/DataVolumes exist for both VMs
+            5. Verify MultiNamespaceVirtualMachineStorageMigrationPlan still exists
 
         Expected:
             - Source PVCs/DataVolumes are deleted for both VMs
+            - MultiNamespaceVirtualMachineStorageMigrationPlan remains available after cleanup
         """
 
-    @pytest.mark.polarion("CNV-TODO")
+    @pytest.mark.polarion("CNV-16562")
     def test_spec_level_retention_policy_keep_source_combined_mode(self):
         """
         Test plan-level retentionPolicy=keepSource with combined online+offline migration.
@@ -289,10 +297,12 @@ class TestStorageMigrationCombinedRetentionPolicy:
             2. Wait for all migrations to complete successfully
             3. Verify both VMs are using new PVCs
             4. Check if source PVCs exist in both namespaces
+            5. Verify MultiNamespaceVirtualMachineStorageMigrationPlan still exists
 
         Expected:
             - Source PVCs in namespace with namespace-level deleteSource policy are deleted
             - Source PVCs in namespace without namespace-level policy are kept (plan-level keepSource)
+            - MultiNamespaceVirtualMachineStorageMigrationPlan remains available after cleanup
         """
 
     @pytest.mark.polarion("CNV-16306")
@@ -311,10 +321,12 @@ class TestStorageMigrationCombinedRetentionPolicy:
             2. Wait for all migrations to complete successfully
             3. Verify both VMs are using new PVCs
             4. Check if source PVCs exist in both namespaces
+            5. Verify MultiNamespaceVirtualMachineStorageMigrationPlan still exists
 
         Expected:
             - Source PVCs in namespace with namespace-level keepSource policy are kept (namespace overrides plan)
             - Source PVCs in namespace without namespace-level policy are deleted (plan-level deleteSource)
+            - MultiNamespaceVirtualMachineStorageMigrationPlan remains available after cleanup
         """
 
     @pytest.mark.polarion("CNV-16307")
@@ -333,9 +345,11 @@ class TestStorageMigrationCombinedRetentionPolicy:
             2. Wait for all migrations to complete successfully
             3. Verify both VMs are using new PVCs
             4. Check if source PVCs exist in both namespaces
+            5. Verify MultiNamespaceVirtualMachineStorageMigrationPlan still exists
 
         Expected:
             - All source PVCs are deleted
+            - MultiNamespaceVirtualMachineStorageMigrationPlan remains available after cleanup
         """
 
     @pytest.mark.polarion("CNV-16308")
