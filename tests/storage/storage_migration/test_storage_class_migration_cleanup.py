@@ -15,8 +15,6 @@ STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob
 
 import pytest
 
-__test__ = False
-
 
 class TestStorageMigrationRetentionPolicy:
     """
