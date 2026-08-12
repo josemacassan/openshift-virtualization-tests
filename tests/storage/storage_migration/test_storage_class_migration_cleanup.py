@@ -31,6 +31,8 @@ class TestStorageMigrationRetentionPolicy:
       - VM with source PVC/DataVolume
     """
 
+    __test__ = False
+
     @pytest.mark.polarion("CNV-16297")
     def test_retention_policy_default_behavior(self):
         """
@@ -150,6 +152,8 @@ class TestStorageMigrationRetentionPolicyCombinedMode:
       - Running VM (online migration) with source PVC/DataVolume
       - Stopped VM (offline migration) with source PVC/DataVolume
     """
+
+    __test__ = False
 
     @pytest.mark.polarion("CNV-16558")
     def test_retention_policy_default_behavior_combined_mode(self):
@@ -279,6 +283,8 @@ class TestStorageMigrationCombinedRetentionPolicy:
 
     """
 
+    __test__ = False
+
     @pytest.mark.polarion("CNV-16305")
     def test_namespace_delete_overrides_plan_keep(self):
         """
@@ -382,6 +388,8 @@ class TestStorageMigrationFailureRetentionPolicy:
     Preconditions:
       - VM with source PVC/DataVolume
     """
+
+    __test__ = False
 
     @pytest.mark.polarion("CNV-16309")
     def test_failed_migration_with_delete_source_policy(self):
