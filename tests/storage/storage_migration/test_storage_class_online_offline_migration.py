@@ -57,26 +57,30 @@ class TestMixedOfflineOnlineStorageMigration:
     Preconditions:
         - Source and target storage classes available
         - Stopped VM on the source storage class
-        - Running VM on the source storage class
+        - Running VM on the source storage class, boot time recorded before migration
     """
 
     def test_mixed_offline_online_vm_storage_migration(self):
         """
-        Test that storage migration completes for a plan containing both offline and running VMs.
+        Test that storage migration completes for a plan containing both offline and running VMs
+        while each VM preserves its original state.
 
         Preconditions:
             - Stopped VM on the source storage class
-            - Running VM on the source storage class
+            - Running VM on the source storage class, boot time recorded before migration
 
         Steps:
             1. Create a storage migration plan including both the stopped VM and the running VM
-            2. Execute the storage migration and wait for completion
-            3. Verify all VMs point to the target storage class
+            2. Execute the storage migration
+            3. Verify the running VM remains running while migration is in progress
+            4. Wait for migration to complete
+            5. Verify all VMs point to the target storage class
+            6. Verify each VM preserved its original state after migration
 
         Expected:
             - Migration plan status is "Succeeded"
-            - Stopped VM disk references point to the target storage class
-            - Running VM disk references point to the target storage class and VM remains running
+            - Stopped VM disk references point to the target storage class and VM remains stopped
+            - Running VM disk references point to the target storage class and VM remained running throughout without restart
         """
 
 
@@ -169,6 +173,7 @@ class TestOfflineVMStorageMigrationSameStorageClass:
     Preconditions:
         - HPP storage class available
         - Stopped VM with a data disk on HPP storage class
+        - VM disk volume references recorded before migration
     """
 
     def test_offline_vm_same_storage_class_migration(self):
@@ -177,6 +182,7 @@ class TestOfflineVMStorageMigrationSameStorageClass:
 
         Preconditions:
             - Stopped VM with a data disk on HPP storage class
+            - VM disk volume references recorded before migration
 
         Steps:
             1. Create a storage migration plan targeting the same HPP storage class
@@ -185,7 +191,7 @@ class TestOfflineVMStorageMigrationSameStorageClass:
 
         Expected:
             - Migration plan status is "Succeeded"
-            - VM disk references point to a new volume on the target node
+            - VM disk references point to a new volume different from the original
             - VM boots successfully after migration
         """
 
