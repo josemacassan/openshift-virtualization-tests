@@ -16,6 +16,9 @@ from tests.storage.storage_migration.constants import (
     CONTENT,
     FILE_BEFORE_STORAGE_MIGRATION,
     HOTPLUGGED_DEVICES,
+    INVALID_STORAGE_CLASS,
+    MIGRATION_MODE_COMBINED,
+    MIGRATION_MODE_OFFLINE,
     MOUNT_HOTPLUGGED_DEVICE_PATHS,
     NUM_HOTPLUG_DISKS,
     WINDOWS_FILE_WITH_PATH,
@@ -23,7 +26,10 @@ from tests.storage.storage_migration.constants import (
 )
 from tests.storage.storage_migration.utils import (
     build_namespaces_spec_for_storage_migration,
+    create_cleanup_test_vm,
+    get_vm_source_dv_names,
     wait_for_storage_migration_completed,
+    wait_for_storage_migration_failed,
 )
 from tests.storage.utils import create_windows_directory, get_storage_class_for_storage_migration
 from tests.utils import create_windows2022_vm
@@ -413,3 +419,327 @@ def cleaned_up_standalone_data_volume_after_storage_migration(unprivileged_clien
     for dv in DataVolume.get(client=unprivileged_client, namespace=namespace.name):
         if dv.name.startswith(f"{data_volume_scope_class.name}-mig"):
             assert dv.clean_up(wait=True)
+
+
+@pytest.fixture(scope="class")
+def migration_mode(request):
+    return request.param
+
+
+@pytest.fixture()
+def retention_policy_vm(
+    unprivileged_client, namespace, golden_images_namespace, source_storage_class, cpu_for_migration
+):
+    yield from create_cleanup_test_vm(
+        unprivileged_client=unprivileged_client,
+        namespace_name=namespace.name,
+        golden_images_namespace=golden_images_namespace,
+        source_storage_class=source_storage_class,
+        cpu_for_migration=cpu_for_migration,
+        vm_name="retention-vm",
+    )
+
+
+@pytest.fixture()
+def ready_retention_policy_vm(retention_policy_vm, migration_mode):
+    if migration_mode == MIGRATION_MODE_OFFLINE:
+        retention_policy_vm.stop(wait=True)
+    yield retention_policy_vm
+
+
+@pytest.fixture()
+def source_dv_names_before_migration(ready_retention_policy_vm):
+    yield get_vm_source_dv_names(vm=ready_retention_policy_vm)
+
+
+@pytest.fixture()
+def retention_policy_mig_plan(
+    request,
+    admin_client,
+    migration_resources_namespace,
+    target_storage_class,
+    ready_retention_policy_vm,
+):
+    config = request.param
+    spec_retention_policy = config.get("spec_retention_policy")
+    ns_retention_policy = config.get("ns_retention_policy")
+
+    namespaces_spec = build_namespaces_spec_for_storage_migration(
+        vms=[ready_retention_policy_vm],
+        target_storage_class=target_storage_class,
+    )
+    if ns_retention_policy:
+        for ns_entry in namespaces_spec:
+            ns_entry["retentionPolicy"] = ns_retention_policy
+
+    with MultiNamespaceVirtualMachineStorageMigrationPlan(
+        name="retention-plan",
+        namespace=migration_resources_namespace.name,
+        client=admin_client,
+        namespaces=namespaces_spec,
+        retention_policy=spec_retention_policy,
+    ) as mig_plan:
+        yield mig_plan
+
+
+@pytest.fixture()
+def retention_policy_mig_migration(admin_client, retention_policy_mig_plan, source_dv_names_before_migration):
+    with MultiNamespaceVirtualMachineStorageMigration(
+        name=f"mig-{retention_policy_mig_plan.name}",
+        namespace=retention_policy_mig_plan.namespace,
+        client=admin_client,
+        multi_namespace_virtual_machine_storage_migration_plan_ref={"name": retention_policy_mig_plan.name},
+    ) as mig_migration:
+        wait_for_storage_migration_completed(mig_migration=mig_migration)
+        yield mig_migration
+
+
+@pytest.fixture()
+def combined_mode_running_vm(
+    unprivileged_client, namespace, golden_images_namespace, source_storage_class, cpu_for_migration
+):
+    yield from create_cleanup_test_vm(
+        unprivileged_client=unprivileged_client,
+        namespace_name=namespace.name,
+        golden_images_namespace=golden_images_namespace,
+        source_storage_class=source_storage_class,
+        cpu_for_migration=cpu_for_migration,
+        vm_name="combined-running-vm",
+    )
+
+
+@pytest.fixture()
+def combined_mode_stopped_vm(
+    unprivileged_client, namespace, golden_images_namespace, source_storage_class, cpu_for_migration
+):
+    yield from create_cleanup_test_vm(
+        unprivileged_client=unprivileged_client,
+        namespace_name=namespace.name,
+        golden_images_namespace=golden_images_namespace,
+        source_storage_class=source_storage_class,
+        cpu_for_migration=cpu_for_migration,
+        vm_name="combined-stopped-vm",
+    )
+
+
+@pytest.fixture()
+def ready_combined_mode_stopped_vm(combined_mode_stopped_vm):
+    combined_mode_stopped_vm.stop(wait=True)
+    yield combined_mode_stopped_vm
+
+
+@pytest.fixture()
+def combined_mode_running_vm_source_dvs(combined_mode_running_vm):
+    yield get_vm_source_dv_names(vm=combined_mode_running_vm)
+
+
+@pytest.fixture()
+def combined_mode_stopped_vm_source_dvs(ready_combined_mode_stopped_vm):
+    yield get_vm_source_dv_names(vm=ready_combined_mode_stopped_vm)
+
+
+@pytest.fixture()
+def combined_mode_mig_plan(
+    request,
+    admin_client,
+    migration_resources_namespace,
+    target_storage_class,
+    combined_mode_running_vm,
+    ready_combined_mode_stopped_vm,
+):
+    config = request.param
+    spec_retention_policy = config.get("spec_retention_policy")
+    ns_retention_policy = config.get("ns_retention_policy")
+
+    namespaces_spec = build_namespaces_spec_for_storage_migration(
+        vms=[combined_mode_running_vm, ready_combined_mode_stopped_vm],
+        target_storage_class=target_storage_class,
+    )
+    if ns_retention_policy:
+        for ns_entry in namespaces_spec:
+            ns_entry["retentionPolicy"] = ns_retention_policy
+
+    with MultiNamespaceVirtualMachineStorageMigrationPlan(
+        name="combined-mode-plan",
+        namespace=migration_resources_namespace.name,
+        client=admin_client,
+        namespaces=namespaces_spec,
+        retention_policy=spec_retention_policy,
+    ) as mig_plan:
+        yield mig_plan
+
+
+@pytest.fixture()
+def combined_mode_mig_migration(
+    admin_client,
+    combined_mode_mig_plan,
+    combined_mode_running_vm_source_dvs,
+    combined_mode_stopped_vm_source_dvs,
+):
+    with MultiNamespaceVirtualMachineStorageMigration(
+        name=f"mig-{combined_mode_mig_plan.name}",
+        namespace=combined_mode_mig_plan.namespace,
+        client=admin_client,
+        multi_namespace_virtual_machine_storage_migration_plan_ref={"name": combined_mode_mig_plan.name},
+    ) as mig_migration:
+        wait_for_storage_migration_completed(mig_migration=mig_migration)
+        yield mig_migration
+
+
+@pytest.fixture()
+def second_vm_namespace(admin_client, unprivileged_client):
+    yield from create_ns(
+        admin_client=admin_client,
+        unprivileged_client=unprivileged_client,
+        name="cleanup-second-ns",
+    )
+
+
+@pytest.fixture()
+def combined_policy_vm_first_ns(
+    unprivileged_client, namespace, golden_images_namespace, source_storage_class, cpu_for_migration
+):
+    yield from create_cleanup_test_vm(
+        unprivileged_client=unprivileged_client,
+        namespace_name=namespace.name,
+        golden_images_namespace=golden_images_namespace,
+        source_storage_class=source_storage_class,
+        cpu_for_migration=cpu_for_migration,
+        vm_name="policy-vm-ns1",
+    )
+
+
+@pytest.fixture()
+def combined_policy_vm_second_ns(
+    unprivileged_client, second_vm_namespace, golden_images_namespace, source_storage_class, cpu_for_migration
+):
+    yield from create_cleanup_test_vm(
+        unprivileged_client=unprivileged_client,
+        namespace_name=second_vm_namespace.name,
+        golden_images_namespace=golden_images_namespace,
+        source_storage_class=source_storage_class,
+        cpu_for_migration=cpu_for_migration,
+        vm_name="policy-vm-ns2",
+    )
+
+
+@pytest.fixture()
+def combined_policy_ready_vms(combined_policy_vm_first_ns, combined_policy_vm_second_ns, migration_mode):
+    if migration_mode == MIGRATION_MODE_OFFLINE:
+        combined_policy_vm_first_ns.stop(wait=True)
+        combined_policy_vm_second_ns.stop(wait=True)
+    elif migration_mode == MIGRATION_MODE_COMBINED:
+        combined_policy_vm_second_ns.stop(wait=True)
+    yield [combined_policy_vm_first_ns, combined_policy_vm_second_ns]
+
+
+@pytest.fixture()
+def combined_policy_source_dv_names_first_ns(combined_policy_ready_vms):
+    yield get_vm_source_dv_names(vm=combined_policy_ready_vms[0])
+
+
+@pytest.fixture()
+def combined_policy_source_dv_names_second_ns(combined_policy_ready_vms):
+    yield get_vm_source_dv_names(vm=combined_policy_ready_vms[1])
+
+
+@pytest.fixture()
+def combined_policy_mig_plan(
+    request,
+    admin_client,
+    migration_resources_namespace,
+    target_storage_class,
+    combined_policy_ready_vms,
+    combined_policy_source_dv_names_first_ns,
+    combined_policy_source_dv_names_second_ns,
+):
+    config = request.param
+    spec_retention_policy = config["spec_retention_policy"]
+    ns_override_retention_policy = config["ns_override_retention_policy"]
+
+    namespaces_spec = build_namespaces_spec_for_storage_migration(
+        vms=combined_policy_ready_vms,
+        target_storage_class=target_storage_class,
+    )
+    namespaces_spec[0]["retentionPolicy"] = ns_override_retention_policy
+
+    with MultiNamespaceVirtualMachineStorageMigrationPlan(
+        name="combined-policy-plan",
+        namespace=migration_resources_namespace.name,
+        client=admin_client,
+        namespaces=namespaces_spec,
+        retention_policy=spec_retention_policy,
+    ) as mig_plan:
+        yield mig_plan
+
+
+@pytest.fixture()
+def combined_policy_mig_migration(
+    admin_client,
+    combined_policy_mig_plan,
+    combined_policy_source_dv_names_first_ns,
+    combined_policy_source_dv_names_second_ns,
+):
+    with MultiNamespaceVirtualMachineStorageMigration(
+        name=f"mig-{combined_policy_mig_plan.name}",
+        namespace=combined_policy_mig_plan.namespace,
+        client=admin_client,
+        multi_namespace_virtual_machine_storage_migration_plan_ref={"name": combined_policy_mig_plan.name},
+    ) as mig_migration:
+        wait_for_storage_migration_completed(mig_migration=mig_migration)
+        yield mig_migration
+
+
+@pytest.fixture()
+def failure_test_vm(unprivileged_client, namespace, golden_images_namespace, source_storage_class, cpu_for_migration):
+    yield from create_cleanup_test_vm(
+        unprivileged_client=unprivileged_client,
+        namespace_name=namespace.name,
+        golden_images_namespace=golden_images_namespace,
+        source_storage_class=source_storage_class,
+        cpu_for_migration=cpu_for_migration,
+        vm_name="failure-vm",
+    )
+
+
+@pytest.fixture()
+def failure_source_dv_names(failure_test_vm):
+    yield get_vm_source_dv_names(vm=failure_test_vm)
+
+
+@pytest.fixture()
+def failure_mig_plan(
+    request,
+    admin_client,
+    migration_resources_namespace,
+    failure_test_vm,
+    failure_source_dv_names,
+):
+    config = request.param
+    retention_policy = config.get("retention_policy")
+
+    namespaces_spec = build_namespaces_spec_for_storage_migration(
+        vms=[failure_test_vm],
+        target_storage_class=INVALID_STORAGE_CLASS,
+    )
+
+    with MultiNamespaceVirtualMachineStorageMigrationPlan(
+        name="failure-plan",
+        namespace=migration_resources_namespace.name,
+        client=admin_client,
+        namespaces=namespaces_spec,
+        retention_policy=retention_policy,
+    ) as mig_plan:
+        yield mig_plan
+
+
+@pytest.fixture()
+def failure_mig_migration(admin_client, failure_mig_plan, failure_source_dv_names):
+    with MultiNamespaceVirtualMachineStorageMigration(
+        name=f"mig-{failure_mig_plan.name}",
+        namespace=failure_mig_plan.namespace,
+        client=admin_client,
+        multi_namespace_virtual_machine_storage_migration_plan_ref={"name": failure_mig_plan.name},
+    ) as mig_migration:
+        wait_for_storage_migration_failed(mig_migration=mig_migration)
+        yield mig_migration
