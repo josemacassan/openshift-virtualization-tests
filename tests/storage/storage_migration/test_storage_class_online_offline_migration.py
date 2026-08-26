@@ -178,7 +178,6 @@ class TestOfflineVMStorageMigrationWithHotplugDisks:
         """
 
 
-
 class TestOfflineVMStorageMigrationFailureRollback:
     """
     Tests for offline VM rollback behavior on storage migration failure.
