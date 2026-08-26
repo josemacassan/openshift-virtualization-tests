@@ -12,12 +12,12 @@ __test__ = False
 
 class TestOfflineVMStorageMigrationVolumeModes:
     """
-    Tests for offline VM storage migration between ODF and HPP across volume mode combinations.
+    Tests for offline VM storage migration across volume mode combinations.
 
     Parametrize:
         - storage_class_direction:
-            - ODF to HPP
-            - HPP to ODF
+            - Storage class A to storage class B
+            - Storage class B to storage class A
         - volume_mode:
             - Block-to-Block
             - File-to-File
@@ -25,7 +25,7 @@ class TestOfflineVMStorageMigrationVolumeModes:
             - File-to-Block
 
     Preconditions:
-        - Source and target storage classes available (ODF and HPP)
+        - Source and target storage classes available on the cluster
         - Stopped VM with a data disk on the source storage class using the source volume mode
         - File written to the VM data disk with known content
     """
@@ -34,7 +34,7 @@ class TestOfflineVMStorageMigrationVolumeModes:
     def test_offline_vm_storage_migration_across_volume_modes(self):
         """
         Test that offline VM storage migration completes successfully and preserves data
-        across volume mode combinations between ODF and HPP.
+        across volume mode combinations between different storage classes.
 
         Preconditions:
             - Stopped VM with a data disk on the source storage class using the source volume mode
@@ -95,6 +95,7 @@ class TestOfflineStorageMigrationCleanupPolicy:
     Preconditions:
         - Source and target storage classes available
         - Stopped VM with a data disk on the source storage class
+        - File written to the VM data disk with known content
         - Source volume identifier recorded before migration
     """
 
@@ -106,15 +107,19 @@ class TestOfflineStorageMigrationCleanupPolicy:
 
         Preconditions:
             - Stopped VM with a data disk on the source storage class
+            - File written to the VM data disk with known content
             - Source volume identifier recorded before migration
 
         Steps:
             1. Create a storage migration plan with cleanup policy set to retain
             2. Execute the storage migration and wait for completion
             3. Check whether the source volumes still exist
+            4. Start the VM after migration completes
+            5. Read the file content from the VM data disk
 
         Expected:
             - Source volumes exist after migration completes
+            - File content equals the pre-migration written data
         """
 
     @pytest.mark.polarion("CNV-16799")
@@ -125,15 +130,19 @@ class TestOfflineStorageMigrationCleanupPolicy:
 
         Preconditions:
             - Stopped VM with a data disk on the source storage class
+            - File written to the VM data disk with known content
             - Source volume identifier recorded before migration
 
         Steps:
             1. Create a storage migration plan with cleanup policy set to delete
             2. Execute the storage migration and wait for completion
             3. Check whether the source volumes still exist
+            4. Start the VM after migration completes
+            5. Read the file content from the VM data disk
 
         Expected:
             - Source volumes do not exist after migration completes
+            - File content equals the pre-migration written data
         """
 
 
@@ -168,40 +177,6 @@ class TestOfflineVMStorageMigrationWithHotplugDisks:
             - VM boots successfully with all disks accessible and file content unchanged
         """
 
-
-class TestOfflineVMStorageMigrationSameStorageClass:
-    """
-    Tests for offline VM storage migration within the same storage class (HPP to HPP)
-    for node-to-node migration.
-
-    Markers:
-        - hpp
-
-    Preconditions:
-        - HPP storage class available
-        - Stopped VM with a data disk on HPP storage class
-        - VM disk volume references recorded before migration
-    """
-
-    @pytest.mark.polarion("CNV-16801")
-    def test_offline_vm_same_storage_class_migration(self):
-        """
-        Test that offline VM storage migration completes for same-storage class (HPP to HPP) migration.
-
-        Preconditions:
-            - Stopped VM with a data disk on HPP storage class
-            - VM disk volume references recorded before migration
-
-        Steps:
-            1. Create a storage migration plan targeting the same HPP storage class
-            2. Execute the storage migration and wait for completion
-            3. Start the VM after migration completes
-
-        Expected:
-            - Migration plan status is "Succeeded"
-            - VM disk references point to a new volume different from the original
-            - VM boots successfully after migration
-        """
 
 
 class TestOfflineVMStorageMigrationFailureRollback:
@@ -243,6 +218,7 @@ class TestVMStartDuringStorageMigration:
     Preconditions:
         - Source and target storage classes available
         - Stopped VM with a data disk on the source storage class
+        - File written to the VM data disk with known content
     """
 
     @pytest.mark.polarion("CNV-16803")
@@ -253,6 +229,7 @@ class TestVMStartDuringStorageMigration:
 
         Preconditions:
             - Stopped VM with a data disk on the source storage class
+            - File written to the VM data disk with known content
 
         Steps:
             1. Create a storage migration plan for the stopped VM
@@ -260,11 +237,13 @@ class TestVMStartDuringStorageMigration:
             3. Start the VM while migration is in progress
             4. Verify VM state during migration
             5. Wait for migration to complete
+            6. Read the file content from the VM data disk
 
         Expected:
             - Migration plan status is "Succeeded"
             - VM remains in a pending state during migration and becomes ready only after migration completes
             - VM disk references point to the target storage class
+            - File content equals the pre-migration written data
         """
 
 
