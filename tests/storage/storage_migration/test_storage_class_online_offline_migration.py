@@ -7,8 +7,6 @@ Jira: https://issues.redhat.com/browse/CNV-77501 # <skip-jira-utils-check>
 
 import pytest
 
-__test__ = False
-
 
 class TestOfflineVMStorageMigrationVolumeModes:
     """
@@ -29,6 +27,8 @@ class TestOfflineVMStorageMigrationVolumeModes:
         - Stopped VM with a data disk on the source storage class using the source volume mode
         - File written to the VM data disk with known content
     """
+
+    __test__ = False
 
     @pytest.mark.polarion("CNV-16796")
     def test_offline_vm_storage_migration_across_volume_modes(self):
@@ -62,6 +62,8 @@ class TestMixedOfflineOnlineStorageMigration:
         - Stopped VM on the source storage class
         - Running VM on the source storage class, boot time recorded before migration
     """
+
+    __test__ = False
 
     @pytest.mark.polarion("CNV-16797")
     def test_mixed_offline_online_vm_storage_migration(self):
@@ -98,6 +100,8 @@ class TestOfflineStorageMigrationCleanupPolicy:
         - File written to the VM data disk with known content
         - Source volume identifier recorded before migration
     """
+
+    __test__ = False
 
     @pytest.mark.polarion("CNV-16798")
     def test_source_volumes_retained_after_offline_migration(self):
@@ -156,6 +160,8 @@ class TestOfflineVMStorageMigrationWithHotplugDisks:
         - File written to each disk with known content
     """
 
+    __test__ = False
+
     @pytest.mark.polarion("CNV-16800")
     def test_offline_vm_with_hotplug_disks_storage_migration(self):
         """
@@ -189,6 +195,8 @@ class TestOfflineVMStorageMigrationFailureRollback:
         - Storage migration configured to trigger a failure during migration
     """
 
+    __test__ = False
+
     @pytest.mark.polarion("CNV-16802")
     def test_offline_vm_rollback_on_migration_failure(self):
         """
@@ -219,6 +227,8 @@ class TestVMStartDuringStorageMigration:
         - Stopped VM with a data disk on the source storage class
         - File written to the VM data disk with known content
     """
+
+    __test__ = False
 
     @pytest.mark.polarion("CNV-16803")
     def test_vm_start_during_offline_storage_migration(self):
@@ -256,6 +266,8 @@ class TestCancelInProgressStorageMigration:
         - Running VM on the source storage class with a sufficiently large disk
         - VM disk references recorded before migration
     """
+
+    __test__ = False
 
     @pytest.mark.polarion("CNV-16804")
     def test_cancel_in_progress_storage_migration(self):
