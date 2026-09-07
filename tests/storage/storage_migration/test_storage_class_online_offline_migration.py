@@ -43,13 +43,13 @@ class TestOfflineVMStorageMigrationVolumeModes:
         Steps:
             1. Create a storage migration plan for the stopped VM targeting the destination storage class and volume mode
             2. Execute the storage migration and wait for completion
-            3. Verify the migrated disk uses the target volume mode
+            3. Verify the migrated disk uses the target storage class and volume mode
             4. Start the VM after migration completes
             5. Read the file content from the VM data disk
 
         Expected:
             - Migration plan status is "Succeeded"
-            - Migrated disk volume mode equals the target volume mode
+            - Migrated disk uses the target storage class and volume mode
             - VM boots successfully after migration
             - File content equals the pre-migration written data
         """
