@@ -43,11 +43,13 @@ class TestOfflineVMStorageMigrationVolumeModes:
         Steps:
             1. Create a storage migration plan for the stopped VM targeting the destination storage class and volume mode
             2. Execute the storage migration and wait for completion
-            3. Start the VM after migration completes
-            4. Read the file content from the VM data disk
+            3. Verify the migrated disk uses the target volume mode
+            4. Start the VM after migration completes
+            5. Read the file content from the VM data disk
 
         Expected:
             - Migration plan status is "Succeeded"
+            - Migrated disk volume mode equals the target volume mode
             - VM boots successfully after migration
             - File content equals the pre-migration written data
         """
@@ -192,6 +194,7 @@ class TestOfflineVMStorageMigrationFailureRollback:
         - Source and target storage classes available
         - Stopped VM with a data disk on the source storage class
         - VM disk references recorded before migration
+        - Source volume identifier recorded before migration
         - Storage migration configured to trigger a failure during migration
     """
 
@@ -200,21 +203,25 @@ class TestOfflineVMStorageMigrationFailureRollback:
     @pytest.mark.polarion("CNV-16802")
     def test_offline_vm_rollback_on_migration_failure(self):
         """
-        [NEGATIVE] Test that offline VM disk references remain unchanged when storage migration fails.
+        [NEGATIVE] Test that offline VM disk references remain unchanged and the source volume
+        is preserved when storage migration fails.
 
         Preconditions:
             - Stopped VM with a data disk on the source storage class
             - VM disk references recorded before migration
+            - Source volume identifier recorded before migration
             - Storage migration configured to trigger a failure during migration
 
         Steps:
             1. Create a storage migration plan for the stopped VM
             2. Execute the storage migration and wait for it to fail
             3. Verify VM disk references after migration failure
+            4. Verify the source volume still exists after migration failure
 
         Expected:
             - Migration plan status is "Failed"
-            - VM disk references remain unchanged pointing to the original storage
+            - VM disk references remain unchanged pointing to the original storage and the source
+              volume is preserved regardless of cleanup policy
         """
 
 
