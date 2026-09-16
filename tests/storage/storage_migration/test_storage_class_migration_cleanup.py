@@ -14,12 +14,12 @@ STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob
 """
 
 import pytest
-from pytest_testconfig import config as py_config
 
-from tests.storage.constants import STORAGE_CLASS_A, STORAGE_CLASS_B
 from tests.storage.storage_migration.constants import (
     DELETE_SOURCE,
     KEEP_SOURCE,
+    STORAGE_CLASS_MIGRATION_SOURCE,
+    STORAGE_CLASS_MIGRATION_TARGET,
 )
 from tests.storage.storage_migration.utils import (
     verify_source_dvs_deleted,
@@ -32,8 +32,8 @@ from tests.storage.storage_migration.utils import (
     "source_storage_class, target_storage_class",
     [
         pytest.param(
-            {"source_storage_class": py_config[STORAGE_CLASS_A]},
-            {"target_storage_class": py_config[STORAGE_CLASS_B]},
+            {"source_storage_class": STORAGE_CLASS_MIGRATION_SOURCE},
+            {"target_storage_class": STORAGE_CLASS_MIGRATION_TARGET},
             id="source_a_target_b",
         ),
     ],
@@ -167,8 +167,8 @@ class TestStorageMigrationRetentionPolicy:
     "source_storage_class, target_storage_class",
     [
         pytest.param(
-            {"source_storage_class": py_config[STORAGE_CLASS_A]},
-            {"target_storage_class": py_config[STORAGE_CLASS_B]},
+            {"source_storage_class": STORAGE_CLASS_MIGRATION_SOURCE},
+            {"target_storage_class": STORAGE_CLASS_MIGRATION_TARGET},
             id="source_a_target_b",
         ),
     ],
@@ -319,7 +319,7 @@ class TestStorageMigrationCombinedRetentionPolicy:
     "source_storage_class",
     [
         pytest.param(
-            {"source_storage_class": py_config[STORAGE_CLASS_A]},
+            {"source_storage_class": STORAGE_CLASS_MIGRATION_SOURCE},
             id="source_a",
         ),
     ],
