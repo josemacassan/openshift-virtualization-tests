@@ -1,5 +1,11 @@
+from utilities.constants.storage import StorageClassNames
+from utilities.storage import HppCsiStorageClass
+
 FILE_BEFORE_STORAGE_MIGRATION = "file-before-storage-migration"
 CONTENT = "some-content"
+
+STORAGE_CLASS_MIGRATION_SOURCE = StorageClassNames.CEPH_RBD_VIRTUALIZATION
+STORAGE_CLASS_MIGRATION_TARGET = HppCsiStorageClass.Name.HOSTPATH_CSI_BASIC
 
 KEEP_SOURCE = "keepSource"
 DELETE_SOURCE = "deleteSource"
