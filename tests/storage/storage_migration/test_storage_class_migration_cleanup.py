@@ -49,6 +49,14 @@ class TestStorageMigrationRetentionPolicy:
     Preconditions:
       - Running VM (online migration) with source PVC/DataVolume
       - Stopped VM (offline migration) with source PVC/DataVolume
+
+    Steps:
+      - Configure the retention policy at namespace level or at plan spec level
+      - Execute the storage migration plan and wait for it to complete
+
+    Expected:
+      - The VM storage class is updated to the target, and source volumes are kept or
+        deleted according to the configured retention policy
     """
 
     @pytest.mark.parametrize(
@@ -185,6 +193,14 @@ class TestStorageMigrationCombinedRetentionPolicy:
     Preconditions:
       - Running VM (online migration) with source PVC/DataVolume in first namespace
       - Stopped VM (offline migration) with source PVC/DataVolume in second namespace
+
+    Steps:
+      - Configure conflicting retention policies at namespace level and at plan spec level
+      - Execute the storage migration plan and wait for it to complete
+
+    Expected:
+      - The VM storage class is updated to the target, and the namespace-level retention
+        policy takes precedence over the plan-level policy for that namespace
     """
 
     @pytest.mark.parametrize(

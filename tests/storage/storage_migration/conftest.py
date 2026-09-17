@@ -26,8 +26,7 @@ from tests.storage.storage_migration.utils import (
     build_namespaces_spec_for_storage_migration,
     create_cleanup_test_vm,
     get_vm_source_dv_names,
-    wait_for_storage_migration_completed,
-    wait_for_storage_migration_failed,
+    wait_for_storage_migration_phase,
 )
 from tests.storage.utils import create_windows_directory, get_storage_class_for_storage_migration
 from tests.utils import create_windows2022_vm
@@ -92,7 +91,7 @@ def storage_mig_migration(admin_client, storage_mig_plan):
         client=admin_client,
         multi_namespace_virtual_machine_storage_migration_plan_ref={"name": storage_mig_plan.name},
     ) as mig_migration:
-        wait_for_storage_migration_completed(mig_migration=mig_migration)
+        wait_for_storage_migration_phase(mig_migration=mig_migration, expected_phase=mig_migration.Status.COMPLETED)
         yield mig_migration
 
 
@@ -268,7 +267,9 @@ def vms_boot_time_before_storage_migration(online_vms_for_storage_class_migratio
 @pytest.fixture(scope="class")
 def deleted_old_dvs_of_online_vms(unprivileged_client, storage_mig_migration, online_vms_for_storage_class_migration):
     # Wait for the storage migration to complete before reading the migrated source PVC name.
-    wait_for_storage_migration_completed(mig_migration=storage_mig_migration)
+    wait_for_storage_migration_phase(
+        mig_migration=storage_mig_migration, expected_phase=storage_mig_migration.Status.COMPLETED
+    )
     for vm in online_vms_for_storage_class_migration:
         # status.volumeUpdateState is a transient field: it is populated only while a running VM's
         # volume migration is in progress and is cleared by virt-handler once the update completes
@@ -516,16 +517,16 @@ def combined_mode_mig_migration(
         client=admin_client,
         multi_namespace_virtual_machine_storage_migration_plan_ref={"name": combined_mode_mig_plan.name},
     ) as mig_migration:
-        wait_for_storage_migration_completed(mig_migration=mig_migration)
+        wait_for_storage_migration_phase(mig_migration=mig_migration, expected_phase=mig_migration.Status.COMPLETED)
         yield mig_migration
 
 
 @pytest.fixture()
-def second_vm_namespace(admin_client, unprivileged_client):
+def second_vm_namespace(admin_client, unprivileged_client, unique_suffix):
     yield from create_ns(
         admin_client=admin_client,
         unprivileged_client=unprivileged_client,
-        name="cleanup-second-ns",
+        name=f"cleanup-second-ns-{unique_suffix}",
     )
 
 
@@ -616,7 +617,7 @@ def combined_policy_mig_migration(
         client=admin_client,
         multi_namespace_virtual_machine_storage_migration_plan_ref={"name": combined_policy_mig_plan.name},
     ) as mig_migration:
-        wait_for_storage_migration_completed(mig_migration=mig_migration)
+        wait_for_storage_migration_phase(mig_migration=mig_migration, expected_phase=mig_migration.Status.COMPLETED)
         yield mig_migration
 
 
@@ -671,5 +672,5 @@ def failure_mig_migration(admin_client, failure_mig_plan, failure_source_dv_name
         client=admin_client,
         multi_namespace_virtual_machine_storage_migration_plan_ref={"name": failure_mig_plan.name},
     ) as mig_migration:
-        wait_for_storage_migration_failed(mig_migration=mig_migration)
+        wait_for_storage_migration_phase(mig_migration=mig_migration, expected_phase=mig_migration.Status.FAILED)
         yield mig_migration
