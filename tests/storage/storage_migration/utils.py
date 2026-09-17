@@ -63,7 +63,6 @@ def create_cleanup_test_vm(
         ),
         cpu_model=cpu_for_migration,
     ) as vm:
-        vm.start()
         running_vm(vm=vm)
         yield vm
 
@@ -148,10 +147,21 @@ def verify_files_in_hotplugged_disks(vm: VirtualMachineForTests, file_name: str,
     assert not mismatches, f"Data mismatch on hotplugged disk(s): {mismatches}"
 
 
-def wait_for_storage_migration_completed(
-    mig_migration: MultiNamespaceVirtualMachineStorageMigration, timeout: int = TIMEOUT_10MIN
+def wait_for_storage_migration_phase(
+    mig_migration: MultiNamespaceVirtualMachineStorageMigration,
+    expected_phase: str,
+    timeout: int = TIMEOUT_10MIN,
 ) -> None:
-    """Wait for all namespaces in the migration to have phase == Completed."""
+    """Wait for all namespaces in the migration to reach the expected phase.
+
+    Args:
+        mig_migration: Migration resource to monitor.
+        expected_phase: Phase all namespaces must reach (e.g. mig_migration.Status.COMPLETED).
+        timeout: Maximum wait time in seconds.
+
+    Raises:
+        StorageMigrationError: If migration does not reach the expected phase within timeout.
+    """
     last_sample = None
     samples = TimeoutSampler(
         wait_timeout=timeout,
@@ -162,13 +172,12 @@ def wait_for_storage_migration_completed(
         for sample in samples:
             last_sample = sample
             if sample and sample.namespaces:
-                all_completed = all(ns.get("phase") == mig_migration.Status.COMPLETED for ns in sample.namespaces)
-                if all_completed:
+                if all(ns.get("phase") == expected_phase for ns in sample.namespaces):
                     return
     except TimeoutExpiredError as err:
         raise StorageMigrationError(
-            f"Timeout waiting for storage migration '{mig_migration.name}' to complete. "
-            f"Last status sample: {last_sample}"
+            f"Timeout waiting for storage migration '{mig_migration.name}' to reach phase "
+            f"'{expected_phase}'. Last status sample: {last_sample}"
         ) from err
 
 
@@ -210,37 +219,6 @@ def verify_source_dvs_exist(vm: VirtualMachineForTests, source_dv_names: list[st
     for dv_name in source_dv_names:
         dv = DataVolume(client=vm.client, namespace=vm.namespace, name=dv_name)
         assert dv.exists, f"Source DataVolume {dv_name} was deleted from namespace {vm.namespace}"
-
-
-def wait_for_storage_migration_failed(
-    mig_migration: MultiNamespaceVirtualMachineStorageMigration, timeout: int = TIMEOUT_10MIN
-) -> None:
-    """Wait for all namespaces in the migration to have phase == Failed.
-
-    Args:
-        mig_migration: Migration resource to monitor.
-        timeout: Maximum wait time in seconds.
-
-    Raises:
-        StorageMigrationError: If migration does not fail within timeout.
-    """
-    last_sample = None
-    samples = TimeoutSampler(
-        wait_timeout=timeout,
-        sleep=TIMEOUT_10SEC,
-        func=lambda: mig_migration.instance.status,
-    )
-    try:
-        for sample in samples:
-            last_sample = sample
-            if sample and sample.namespaces:
-                all_failed = all(ns.get("phase") == mig_migration.Status.FAILED for ns in sample.namespaces)
-                if all_failed:
-                    return
-    except TimeoutExpiredError as err:
-        raise StorageMigrationError(
-            f"Timeout waiting for storage migration '{mig_migration.name}' to fail. Last status sample: {last_sample}"
-        ) from err
 
 
 def build_namespaces_spec_for_storage_migration(
