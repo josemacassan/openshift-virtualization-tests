@@ -231,7 +231,7 @@ class TestStorageMigrationCombinedRetentionPolicy:
         indirect=True,
     )
     @pytest.mark.xfail(
-        reason=f"{QUARANTINED}: Product bug found, the namespace level retention policy is not applied, CNV-77498",
+        reason=f"{QUARANTINED}: Product bug found, the namespace level retention policy is not applied, CNV-96425",
         run=False,
     )
     @pytest.mark.polarion("CNV-16306")
