@@ -26,6 +26,7 @@ from tests.storage.storage_migration.utils import (
     verify_source_dvs_exist,
     verify_vm_storage_class_updated,
 )
+from utilities.constants.pytest import QUARANTINED
 
 
 @pytest.mark.parametrize(
@@ -229,6 +230,10 @@ class TestStorageMigrationCombinedRetentionPolicy:
         ],
         indirect=True,
     )
+    @pytest.mark.xfail(
+        reason=f"{QUARANTINED}: Product bug found, the namespace level retention policy is not applied, CNV-77498",
+        run=False,
+    )
     @pytest.mark.polarion("CNV-16306")
     @pytest.mark.usefixtures("combined_policy_mig_migration")
     def test_namespace_keep_overrides_plan_delete(
@@ -341,6 +346,9 @@ class TestStorageMigrationFailureRetentionPolicy:
         [pytest.param({"retention_policy": DELETE_SOURCE}, id="delete_source")],
         indirect=True,
     )
+    @pytest.mark.xfail(
+        reason=f"{QUARANTINED}: Not clarified Failing migration cases, wait for product clarification", run=False
+    )
     @pytest.mark.polarion("CNV-16309")
     @pytest.mark.usefixtures("failure_mig_migration")
     def test_failed_migration_with_delete_source_policy(
@@ -354,6 +362,9 @@ class TestStorageMigrationFailureRetentionPolicy:
         "failure_mig_plan",
         [pytest.param({"retention_policy": KEEP_SOURCE}, id="keep_source")],
         indirect=True,
+    )
+    @pytest.mark.xfail(
+        reason=f"{QUARANTINED}: Not clarified Failing migration cases, wait for product clarification", run=False
     )
     @pytest.mark.polarion("CNV-16310")
     @pytest.mark.usefixtures("failure_mig_migration")
