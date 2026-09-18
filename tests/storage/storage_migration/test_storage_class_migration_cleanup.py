@@ -74,6 +74,21 @@ class TestStorageMigrationRetentionPolicy:
         combined_mode_running_vm_source_dvs,
         combined_mode_stopped_vm_source_dvs,
     ):
+        """
+        Verify default behavior keeps source volumes when retentionPolicy is not specified.
+
+        STP Requirement: Default cleanup policy (P1)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume
+            - Stopped VM (offline migration) with source PVC/DataVolume
+
+        Steps:
+            - Execute the migration plan without any retentionPolicy configured
+
+        Expected:
+            - Both VMs use the target storage class and their source volumes are kept
+        """
         verify_vm_storage_class_updated(vm=combined_mode_running_vm, target_storage_class=target_storage_class)
         verify_source_dvs_exist(vm=combined_mode_running_vm, source_dv_names=combined_mode_running_vm_source_dvs)
         verify_vm_storage_class_updated(vm=ready_combined_mode_stopped_vm, target_storage_class=target_storage_class)
@@ -95,6 +110,22 @@ class TestStorageMigrationRetentionPolicy:
         combined_mode_stopped_vm_source_dvs,
         combined_mode_mig_plan,
     ):
+        """
+        Verify namespace-level retentionPolicy=deleteSource deletes source volumes.
+
+        STP Requirement: Namespace-level cleanup policy (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume
+            - Stopped VM (offline migration) with source PVC/DataVolume
+
+        Steps:
+            - Execute the migration plan with namespace-level retentionPolicy=deleteSource
+
+        Expected:
+            - Both VMs use the target storage class, their source volumes are deleted, and
+              the migration plan remains available after cleanup
+        """
         verify_vm_storage_class_updated(vm=combined_mode_running_vm, target_storage_class=target_storage_class)
         verify_source_dvs_deleted(vm=combined_mode_running_vm, source_dv_names=combined_mode_running_vm_source_dvs)
         verify_vm_storage_class_updated(vm=ready_combined_mode_stopped_vm, target_storage_class=target_storage_class)
@@ -121,6 +152,22 @@ class TestStorageMigrationRetentionPolicy:
         combined_mode_stopped_vm_source_dvs,
         combined_mode_mig_plan,
     ):
+        """
+        Verify plan-level retentionPolicy=deleteSource deletes source volumes.
+
+        STP Requirement: Plan-level cleanup policy (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume
+            - Stopped VM (offline migration) with source PVC/DataVolume
+
+        Steps:
+            - Execute the migration plan with plan-level (spec) retentionPolicy=deleteSource
+
+        Expected:
+            - Both VMs use the target storage class, their source volumes are deleted, and
+              the migration plan remains available after cleanup
+        """
         verify_vm_storage_class_updated(vm=combined_mode_running_vm, target_storage_class=target_storage_class)
         verify_source_dvs_deleted(vm=combined_mode_running_vm, source_dv_names=combined_mode_running_vm_source_dvs)
         verify_vm_storage_class_updated(vm=ready_combined_mode_stopped_vm, target_storage_class=target_storage_class)
@@ -146,6 +193,21 @@ class TestStorageMigrationRetentionPolicy:
         combined_mode_running_vm_source_dvs,
         combined_mode_stopped_vm_source_dvs,
     ):
+        """
+        Verify namespace-level retentionPolicy=keepSource keeps source volumes.
+
+        STP Requirement: Namespace-level cleanup policy (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume
+            - Stopped VM (offline migration) with source PVC/DataVolume
+
+        Steps:
+            - Execute the migration plan with namespace-level retentionPolicy=keepSource
+
+        Expected:
+            - Both VMs use the target storage class and their source volumes are kept
+        """
         verify_vm_storage_class_updated(vm=combined_mode_running_vm, target_storage_class=target_storage_class)
         verify_source_dvs_exist(vm=combined_mode_running_vm, source_dv_names=combined_mode_running_vm_source_dvs)
         verify_vm_storage_class_updated(vm=ready_combined_mode_stopped_vm, target_storage_class=target_storage_class)
@@ -166,6 +228,21 @@ class TestStorageMigrationRetentionPolicy:
         combined_mode_running_vm_source_dvs,
         combined_mode_stopped_vm_source_dvs,
     ):
+        """
+        Verify plan-level retentionPolicy=keepSource keeps source volumes.
+
+        STP Requirement: Plan-level cleanup policy (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume
+            - Stopped VM (offline migration) with source PVC/DataVolume
+
+        Steps:
+            - Execute the migration plan with plan-level (spec) retentionPolicy=keepSource
+
+        Expected:
+            - Both VMs use the target storage class and their source volumes are kept
+        """
         verify_vm_storage_class_updated(vm=combined_mode_running_vm, target_storage_class=target_storage_class)
         verify_source_dvs_exist(vm=combined_mode_running_vm, source_dv_names=combined_mode_running_vm_source_dvs)
         verify_vm_storage_class_updated(vm=ready_combined_mode_stopped_vm, target_storage_class=target_storage_class)
@@ -224,6 +301,24 @@ class TestStorageMigrationCombinedRetentionPolicy:
         combined_policy_source_dv_names_second_ns,
         combined_policy_mig_plan,
     ):
+        """
+        Verify namespace-level deleteSource overrides plan-level keepSource for that namespace.
+
+        STP Requirement: Combined namespace and plan-level cleanup policies (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume in first namespace
+            - Stopped VM (offline migration) with source PVC/DataVolume in second namespace
+
+        Steps:
+            - Execute the migration plan with plan-level retentionPolicy=keepSource and
+              namespace-level retentionPolicy=deleteSource for the first namespace
+
+        Expected:
+            - Source volumes in the namespace with deleteSource are deleted while source
+              volumes in the namespace without a namespace-level policy are kept (plan-level
+              keepSource), and the migration plan remains available after cleanup
+        """
         verify_vm_storage_class_updated(vm=combined_policy_vm_first_ns, target_storage_class=target_storage_class)
         verify_source_dvs_deleted(
             vm=combined_policy_vm_first_ns, source_dv_names=combined_policy_source_dv_names_first_ns
@@ -261,6 +356,25 @@ class TestStorageMigrationCombinedRetentionPolicy:
         combined_policy_source_dv_names_second_ns,
         combined_policy_mig_plan,
     ):
+        """
+        Verify namespace-level keepSource overrides plan-level deleteSource for that namespace.
+
+        STP Requirement: Combined namespace and plan-level cleanup policies (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume in first namespace
+            - Stopped VM (offline migration) with source PVC/DataVolume in second namespace
+
+        Steps:
+            - Execute the migration plan with plan-level retentionPolicy=deleteSource and
+              namespace-level retentionPolicy=keepSource for the first namespace
+
+        Expected:
+            - Source volumes in the namespace with keepSource are kept (namespace overrides
+              plan) while source volumes in the namespace without a namespace-level policy are
+              deleted (plan-level deleteSource), and the migration plan remains available after
+              cleanup
+        """
         verify_vm_storage_class_updated(vm=combined_policy_vm_first_ns, target_storage_class=target_storage_class)
         verify_source_dvs_exist(
             vm=combined_policy_vm_first_ns, source_dv_names=combined_policy_source_dv_names_first_ns
@@ -294,6 +408,23 @@ class TestStorageMigrationCombinedRetentionPolicy:
         combined_policy_source_dv_names_second_ns,
         combined_policy_mig_plan,
     ):
+        """
+        Verify namespace-level and plan-level deleteSource together delete all source volumes.
+
+        STP Requirement: Combined namespace and plan-level cleanup policies (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume in first namespace
+            - Stopped VM (offline migration) with source PVC/DataVolume in second namespace
+
+        Steps:
+            - Execute the migration plan with plan-level retentionPolicy=deleteSource and
+              namespace-level retentionPolicy=deleteSource for the first namespace
+
+        Expected:
+            - All source volumes are deleted and the migration plan remains available after
+              cleanup
+        """
         verify_vm_storage_class_updated(vm=combined_policy_vm_first_ns, target_storage_class=target_storage_class)
         verify_source_dvs_deleted(
             vm=combined_policy_vm_first_ns, source_dv_names=combined_policy_source_dv_names_first_ns
@@ -326,6 +457,22 @@ class TestStorageMigrationCombinedRetentionPolicy:
         combined_policy_source_dv_names_first_ns,
         combined_policy_source_dv_names_second_ns,
     ):
+        """
+        Verify namespace-level and plan-level keepSource together keep all source volumes.
+
+        STP Requirement: Combined namespace and plan-level cleanup policies (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume in first namespace
+            - Stopped VM (offline migration) with source PVC/DataVolume in second namespace
+
+        Steps:
+            - Execute the migration plan with plan-level retentionPolicy=keepSource and
+              namespace-level retentionPolicy=keepSource for the first namespace
+
+        Expected:
+            - All source volumes are kept
+        """
         verify_vm_storage_class_updated(vm=combined_policy_vm_first_ns, target_storage_class=target_storage_class)
         verify_source_dvs_exist(
             vm=combined_policy_vm_first_ns, source_dv_names=combined_policy_source_dv_names_first_ns
@@ -372,6 +519,21 @@ class TestStorageMigrationFailureRetentionPolicy:
         failure_test_vm,
         failure_source_dv_names,
     ):
+        """
+        [NEGATIVE] Verify source volumes are retained when migration fails with retentionPolicy=deleteSource.
+
+        STP Requirement: Source volumes preserved on migration failure (P2)
+
+        Preconditions:
+            - VM with source PVC/DataVolume
+
+        Steps:
+            - Execute a migration plan with plan-level retentionPolicy=deleteSource and an
+              invalid target storage class, then wait for the migration to fail
+
+        Expected:
+            - Source volumes are retained despite the deleteSource policy
+        """
         verify_source_dvs_exist(vm=failure_test_vm, source_dv_names=failure_source_dv_names)
 
     @pytest.mark.parametrize(
@@ -389,4 +551,19 @@ class TestStorageMigrationFailureRetentionPolicy:
         failure_test_vm,
         failure_source_dv_names,
     ):
+        """
+        [NEGATIVE] Verify source volumes are retained when migration fails with retentionPolicy=keepSource.
+
+        STP Requirement: Source volumes preserved on migration failure (P2)
+
+        Preconditions:
+            - VM with source PVC/DataVolume
+
+        Steps:
+            - Execute a migration plan with plan-level retentionPolicy=keepSource and an
+              invalid target storage class, then wait for the migration to fail
+
+        Expected:
+            - Source volumes are retained
+        """
         verify_source_dvs_exist(vm=failure_test_vm, source_dv_names=failure_source_dv_names)
