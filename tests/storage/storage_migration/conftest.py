@@ -1,8 +1,8 @@
 import contextlib
 import shlex
+from uuid import uuid4
 
 import pytest
-import shortuuid
 from ocp_resources.data_source import DataSource
 from ocp_resources.datavolume import DataVolume
 from ocp_resources.multi_namespace_virtual_machine_storage_migration import MultiNamespaceVirtualMachineStorageMigration
@@ -65,9 +65,9 @@ def migration_plan_suffix():
     function-scoped suffix keeps each test method's plan and migration uniquely named.
 
     Returns:
-        A 4-character lowercase random suffix.
+        A collision-resistant hexadecimal random suffix.
     """
-    return shortuuid.ShortUUID().random(length=4).lower()
+    return uuid4().hex
 
 
 @pytest.fixture(scope="class")
