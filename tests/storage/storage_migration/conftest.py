@@ -2,6 +2,7 @@ import contextlib
 import shlex
 
 import pytest
+import shortuuid
 from ocp_resources.data_source import DataSource
 from ocp_resources.datavolume import DataVolume
 from ocp_resources.multi_namespace_virtual_machine_storage_migration import MultiNamespaceVirtualMachineStorageMigration
@@ -52,6 +53,21 @@ from utilities.virt import (
 )
 
 DEFAULT_DV_SIZE = "1Gi"
+
+
+@pytest.fixture()
+def migration_plan_suffix():
+    """Provide a unique per-test suffix for storage migration plan and migration names.
+
+    The VM namespace (module-scoped) and migration namespace (class-scoped) are shared across a
+    class, so reusing a plan name lets the storage-migration controller report a previous test's
+    stale "Completed" status, which is then accepted before the current VMs are migrated. A
+    function-scoped suffix keeps each test method's plan and migration uniquely named.
+
+    Returns:
+        A 4-character lowercase random suffix.
+    """
+    return shortuuid.ShortUUID().random(length=4).lower()
 
 
 @pytest.fixture(scope="class")
@@ -481,6 +497,7 @@ def combined_mode_mig_plan(
     target_storage_class,
     combined_mode_running_vm,
     ready_combined_mode_stopped_vm,
+    migration_plan_suffix,
 ):
     config = request.param
     spec_retention_policy = config.get("spec_retention_policy")
@@ -495,7 +512,7 @@ def combined_mode_mig_plan(
             ns_entry["retentionPolicy"] = ns_retention_policy
 
     with MultiNamespaceVirtualMachineStorageMigrationPlan(
-        name="combined-mode-plan",
+        name=f"combined-mode-plan-{migration_plan_suffix}",
         namespace=migration_resources_namespace.name,
         client=admin_client,
         namespaces=namespaces_spec,
@@ -583,6 +600,7 @@ def combined_policy_mig_plan(
     combined_policy_ready_vms,
     combined_policy_source_dv_names_first_ns,
     combined_policy_source_dv_names_second_ns,
+    migration_plan_suffix,
 ):
     config = request.param
     spec_retention_policy = config["spec_retention_policy"]
@@ -595,7 +613,7 @@ def combined_policy_mig_plan(
     namespaces_spec[0]["retentionPolicy"] = ns_override_retention_policy
 
     with MultiNamespaceVirtualMachineStorageMigrationPlan(
-        name="combined-policy-plan",
+        name=f"combined-policy-plan-{migration_plan_suffix}",
         namespace=migration_resources_namespace.name,
         client=admin_client,
         namespaces=namespaces_spec,
@@ -645,6 +663,7 @@ def failure_mig_plan(
     migration_resources_namespace,
     failure_test_vm,
     failure_source_dv_names,
+    migration_plan_suffix,
 ):
     config = request.param
     retention_policy = config.get("retention_policy")
@@ -655,7 +674,7 @@ def failure_mig_plan(
     )
 
     with MultiNamespaceVirtualMachineStorageMigrationPlan(
-        name="failure-plan",
+        name=f"failure-plan-{migration_plan_suffix}",
         namespace=migration_resources_namespace.name,
         client=admin_client,
         namespaces=namespaces_spec,
