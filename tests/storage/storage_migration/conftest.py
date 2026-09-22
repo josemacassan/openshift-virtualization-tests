@@ -499,9 +499,8 @@ def combined_mode_mig_plan(
     ready_combined_mode_stopped_vm,
     migration_plan_suffix,
 ):
-    config = request.param
-    spec_retention_policy = config.get("spec_retention_policy")
-    ns_retention_policy = config.get("ns_retention_policy")
+    spec_retention_policy = request.param.get("spec_retention_policy")
+    ns_retention_policy = request.param.get("ns_retention_policy")
 
     namespaces_spec = build_namespaces_spec_for_storage_migration(
         vms=[combined_mode_running_vm, ready_combined_mode_stopped_vm],
@@ -602,9 +601,8 @@ def combined_policy_mig_plan(
     combined_policy_source_dv_names_second_ns,
     migration_plan_suffix,
 ):
-    config = request.param
-    spec_retention_policy = config["spec_retention_policy"]
-    ns_override_retention_policy = config["ns_override_retention_policy"]
+    spec_retention_policy = request.param["spec_retention_policy"]
+    ns_override_retention_policy = request.param["ns_override_retention_policy"]
 
     namespaces_spec = build_namespaces_spec_for_storage_migration(
         vms=combined_policy_ready_vms,
@@ -665,8 +663,7 @@ def failure_mig_plan(
     failure_source_dv_names,
     migration_plan_suffix,
 ):
-    config = request.param
-    retention_policy = config.get("retention_policy")
+    retention_policy = request.param.get("retention_policy")
 
     namespaces_spec = build_namespaces_spec_for_storage_migration(
         vms=[failure_test_vm],
