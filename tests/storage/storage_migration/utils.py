@@ -23,7 +23,7 @@ from utilities.storage import data_volume_template_with_source_ref_dict
 from utilities.virt import VirtualMachineForTests, get_vm_boot_time, running_vm
 
 
-def create_cleanup_test_vm(
+def create_retention_policy_test_vm(
     unprivileged_client,
     namespace_name: str,
     golden_images_namespace,
@@ -181,7 +181,7 @@ def wait_for_storage_migration_phase(
         ) from err
 
 
-def get_vm_source_dv_names(vm: VirtualMachineForTests) -> list[str]:
+def get_vm_dv_names(vm: VirtualMachineForTests) -> list[str]:
     """Get DataVolume names from VM spec volumes.
 
     Args:
