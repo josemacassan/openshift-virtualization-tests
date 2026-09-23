@@ -89,11 +89,7 @@ def verify_vms_boot_time_after_storage_migration(
 
 
 def verify_vm_storage_class_updated(vm: VirtualMachineForTests, target_storage_class: str) -> None:
-    vm_pvcs_names = [
-        volume["dataVolume"]["name"]
-        for volume in vm.instance.spec.template.spec.volumes
-        if "dataVolume" in dict(volume)
-    ]
+    vm_pvcs_names = get_vm_dv_names(vm=vm)
     failed_pvc_storage_check = {}
     for pvc_name in vm_pvcs_names:
         pvc_storage_class = PersistentVolumeClaim(
