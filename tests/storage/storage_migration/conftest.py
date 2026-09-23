@@ -25,8 +25,8 @@ from tests.storage.storage_migration.constants import (
 )
 from tests.storage.storage_migration.utils import (
     build_namespaces_spec_for_storage_migration,
-    create_cleanup_test_vm,
-    get_vm_source_dv_names,
+    create_retention_policy_test_vm,
+    get_vm_dv_names,
     wait_for_storage_migration_phase,
 )
 from tests.storage.utils import create_windows_directory, get_storage_class_for_storage_migration
@@ -449,7 +449,7 @@ def cleaned_up_standalone_data_volume_after_storage_migration(unprivileged_clien
 def combined_mode_running_vm(
     unprivileged_client, namespace, golden_images_namespace, source_storage_class, cpu_for_migration
 ):
-    yield from create_cleanup_test_vm(
+    yield from create_retention_policy_test_vm(
         unprivileged_client=unprivileged_client,
         namespace_name=namespace.name,
         golden_images_namespace=golden_images_namespace,
@@ -463,7 +463,7 @@ def combined_mode_running_vm(
 def combined_mode_stopped_vm(
     unprivileged_client, namespace, golden_images_namespace, source_storage_class, cpu_for_migration
 ):
-    yield from create_cleanup_test_vm(
+    yield from create_retention_policy_test_vm(
         unprivileged_client=unprivileged_client,
         namespace_name=namespace.name,
         golden_images_namespace=golden_images_namespace,
@@ -481,12 +481,12 @@ def ready_combined_mode_stopped_vm(combined_mode_stopped_vm):
 
 @pytest.fixture()
 def combined_mode_running_vm_source_dvs(combined_mode_running_vm):
-    yield get_vm_source_dv_names(vm=combined_mode_running_vm)
+    yield get_vm_dv_names(vm=combined_mode_running_vm)
 
 
 @pytest.fixture()
 def combined_mode_stopped_vm_source_dvs(ready_combined_mode_stopped_vm):
-    yield get_vm_source_dv_names(vm=ready_combined_mode_stopped_vm)
+    yield get_vm_dv_names(vm=ready_combined_mode_stopped_vm)
 
 
 @pytest.fixture()
@@ -550,7 +550,7 @@ def second_vm_namespace(admin_client, unprivileged_client, unique_suffix):
 def combined_policy_vm_first_ns(
     unprivileged_client, namespace, golden_images_namespace, source_storage_class, cpu_for_migration
 ):
-    yield from create_cleanup_test_vm(
+    yield from create_retention_policy_test_vm(
         unprivileged_client=unprivileged_client,
         namespace_name=namespace.name,
         golden_images_namespace=golden_images_namespace,
@@ -564,7 +564,7 @@ def combined_policy_vm_first_ns(
 def combined_policy_vm_second_ns(
     unprivileged_client, second_vm_namespace, golden_images_namespace, source_storage_class, cpu_for_migration
 ):
-    yield from create_cleanup_test_vm(
+    yield from create_retention_policy_test_vm(
         unprivileged_client=unprivileged_client,
         namespace_name=second_vm_namespace.name,
         golden_images_namespace=golden_images_namespace,
@@ -582,12 +582,12 @@ def combined_policy_ready_vms(combined_policy_vm_first_ns, combined_policy_vm_se
 
 @pytest.fixture()
 def combined_policy_source_dv_names_first_ns(combined_policy_ready_vms):
-    yield get_vm_source_dv_names(vm=combined_policy_ready_vms[0])
+    yield get_vm_dv_names(vm=combined_policy_ready_vms[0])
 
 
 @pytest.fixture()
 def combined_policy_source_dv_names_second_ns(combined_policy_ready_vms):
-    yield get_vm_source_dv_names(vm=combined_policy_ready_vms[1])
+    yield get_vm_dv_names(vm=combined_policy_ready_vms[1])
 
 
 @pytest.fixture()
@@ -639,7 +639,7 @@ def combined_policy_mig_migration(
 
 @pytest.fixture()
 def failure_test_vm(unprivileged_client, namespace, golden_images_namespace, source_storage_class, cpu_for_migration):
-    yield from create_cleanup_test_vm(
+    yield from create_retention_policy_test_vm(
         unprivileged_client=unprivileged_client,
         namespace_name=namespace.name,
         golden_images_namespace=golden_images_namespace,
@@ -651,7 +651,7 @@ def failure_test_vm(unprivileged_client, namespace, golden_images_namespace, sou
 
 @pytest.fixture()
 def failure_source_dv_names(failure_test_vm):
-    yield get_vm_source_dv_names(vm=failure_test_vm)
+    yield get_vm_dv_names(vm=failure_test_vm)
 
 
 @pytest.fixture()
