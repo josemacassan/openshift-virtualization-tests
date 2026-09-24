@@ -145,14 +145,14 @@ def verify_files_in_hotplugged_disks(vm: VirtualMachineForTests, file_name: str,
 
 def wait_for_storage_migration_phase(
     mig_migration: MultiNamespaceVirtualMachineStorageMigration,
-    expected_phase: str,
+    expected_phase: str = MultiNamespaceVirtualMachineStorageMigration.Status.COMPLETED,
     timeout: int = TIMEOUT_10MIN,
 ) -> None:
     """Wait for all namespaces in the migration to reach the expected phase.
 
     Args:
         mig_migration: Migration resource to monitor.
-        expected_phase: Phase all namespaces must reach (e.g. mig_migration.Status.COMPLETED).
+        expected_phase: Phase all namespaces must reach. Defaults to COMPLETED.
         timeout: Maximum wait time in seconds.
 
     Raises:
