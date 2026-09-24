@@ -17,8 +17,8 @@ from tests.storage.storage_migration.constants import (
     CONTENT,
     FILE_BEFORE_STORAGE_MIGRATION,
     HOTPLUGGED_DEVICES,
-    INVALID_STORAGE_CLASS,
     MOUNT_HOTPLUGGED_DEVICE_PATHS,
+    NON_EXISTENT_STORAGE_CLASS,
     NUM_HOTPLUG_DISKS,
     WINDOWS_FILE_WITH_PATH,
     WINDOWS_TEST_DIRECTORY_PATH,
@@ -667,7 +667,7 @@ def failure_mig_plan(
 
     namespaces_spec = build_namespaces_spec_for_storage_migration(
         vms=[failure_test_vm],
-        target_storage_class=INVALID_STORAGE_CLASS,
+        target_storage_class=NON_EXISTENT_STORAGE_CLASS,
     )
 
     with MultiNamespaceVirtualMachineStorageMigrationPlan(
