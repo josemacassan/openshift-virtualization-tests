@@ -23,20 +23,20 @@ from utilities.storage import data_volume_template_with_source_ref_dict
 from utilities.virt import VirtualMachineForTests, get_vm_boot_time, running_vm
 
 
-def create_retention_policy_test_vm(
+def create_fedora_vm_with_instance_type(
     unprivileged_client,
     namespace_name: str,
-    golden_images_namespace,
+    data_source: DataSource,
     source_storage_class: str,
     cpu_for_migration: str,
     vm_name: str,
 ):
-    """Create a fedora VM for retention policy testing.
+    """Create a running fedora VM with an instance type.
 
     Args:
         unprivileged_client: Kubernetes client for VM creation.
         namespace_name: Namespace where the VM will be created.
-        golden_images_namespace: Namespace containing golden image data sources.
+        data_source: DataSource for the VM's DataVolume source.
         source_storage_class: Storage class for the VM's DataVolume.
         cpu_for_migration: CPU model for migration compatibility.
         vm_name: Name for the VM.
@@ -44,12 +44,6 @@ def create_retention_policy_test_vm(
     Yields:
         Running VirtualMachineForTests instance.
     """
-    golden_images_fedora_data_source = DataSource(
-        namespace=golden_images_namespace.name,
-        name=OS_FLAVOR_FEDORA,
-        client=golden_images_namespace.client,
-        ensure_exists=True,
-    )
     with VirtualMachineForTests(
         name=vm_name,
         namespace=namespace_name,
@@ -58,7 +52,7 @@ def create_retention_policy_test_vm(
         vm_instance_type=VirtualMachineClusterInstancetype(name=U1_SMALL, client=unprivileged_client),
         vm_preference=VirtualMachineClusterPreference(name=OS_FLAVOR_FEDORA, client=unprivileged_client),
         data_volume_template=data_volume_template_with_source_ref_dict(
-            data_source=golden_images_fedora_data_source,
+            data_source=data_source,
             storage_class=source_storage_class,
         ),
         cpu_model=cpu_for_migration,

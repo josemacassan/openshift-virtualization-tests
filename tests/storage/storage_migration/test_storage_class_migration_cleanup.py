@@ -14,12 +14,12 @@ STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob
 """
 
 import pytest
+from pytest_testconfig import config as py_config
 
+from tests.storage.constants import STORAGE_CLASS_A, STORAGE_CLASS_B
 from tests.storage.storage_migration.constants import (
     DELETE_SOURCE,
     KEEP_SOURCE,
-    STORAGE_CLASS_MIGRATION_SOURCE,
-    STORAGE_CLASS_MIGRATION_TARGET,
 )
 from tests.storage.storage_migration.utils import (
     verify_source_dvs_deleted,
@@ -33,8 +33,8 @@ from utilities.constants.pytest import QUARANTINED
     "source_storage_class, target_storage_class",
     [
         pytest.param(
-            {"source_storage_class": STORAGE_CLASS_MIGRATION_SOURCE},
-            {"target_storage_class": STORAGE_CLASS_MIGRATION_TARGET},
+            {"source_storage_class": py_config[STORAGE_CLASS_A]},
+            {"target_storage_class": py_config[STORAGE_CLASS_B]},
             id="source_a_target_b",
         ),
     ],
@@ -68,11 +68,11 @@ class TestStorageMigrationRetentionPolicy:
     @pytest.mark.usefixtures("combined_mode_mig_migration")
     def test_retention_policy_default_behavior(
         self,
-        combined_mode_running_vm,
-        ready_combined_mode_stopped_vm,
+        running_vm_for_scmig_test,
+        stopped_vm_for_scmig_test,
         target_storage_class,
-        combined_mode_running_vm_source_dvs,
-        combined_mode_stopped_vm_source_dvs,
+        running_vm_for_scmig_test_source_dvs,
+        stopped_vm_for_scmig_test_source_dvs,
     ):
         """
         Verify default behavior keeps source volumes when retentionPolicy is not specified.
@@ -89,10 +89,10 @@ class TestStorageMigrationRetentionPolicy:
         Expected:
             - Both VMs use the target storage class and their source volumes are kept
         """
-        verify_vm_storage_class_updated(vm=combined_mode_running_vm, target_storage_class=target_storage_class)
-        verify_source_dvs_exist(vm=combined_mode_running_vm, source_dv_names=combined_mode_running_vm_source_dvs)
-        verify_vm_storage_class_updated(vm=ready_combined_mode_stopped_vm, target_storage_class=target_storage_class)
-        verify_source_dvs_exist(vm=ready_combined_mode_stopped_vm, source_dv_names=combined_mode_stopped_vm_source_dvs)
+        verify_vm_storage_class_updated(vm=running_vm_for_scmig_test, target_storage_class=target_storage_class)
+        verify_source_dvs_exist(vm=running_vm_for_scmig_test, source_dv_names=running_vm_for_scmig_test_source_dvs)
+        verify_vm_storage_class_updated(vm=stopped_vm_for_scmig_test, target_storage_class=target_storage_class)
+        verify_source_dvs_exist(vm=stopped_vm_for_scmig_test, source_dv_names=stopped_vm_for_scmig_test_source_dvs)
 
     @pytest.mark.parametrize(
         "combined_mode_mig_plan",
@@ -103,11 +103,11 @@ class TestStorageMigrationRetentionPolicy:
     @pytest.mark.usefixtures("combined_mode_mig_migration")
     def test_namespace_level_retention_policy_delete_source(
         self,
-        combined_mode_running_vm,
-        ready_combined_mode_stopped_vm,
+        running_vm_for_scmig_test,
+        stopped_vm_for_scmig_test,
         target_storage_class,
-        combined_mode_running_vm_source_dvs,
-        combined_mode_stopped_vm_source_dvs,
+        running_vm_for_scmig_test_source_dvs,
+        stopped_vm_for_scmig_test_source_dvs,
         combined_mode_mig_plan,
     ):
         """
@@ -126,12 +126,10 @@ class TestStorageMigrationRetentionPolicy:
             - Both VMs use the target storage class, their source volumes are deleted, and
               the migration plan remains available after cleanup
         """
-        verify_vm_storage_class_updated(vm=combined_mode_running_vm, target_storage_class=target_storage_class)
-        verify_source_dvs_deleted(vm=combined_mode_running_vm, source_dv_names=combined_mode_running_vm_source_dvs)
-        verify_vm_storage_class_updated(vm=ready_combined_mode_stopped_vm, target_storage_class=target_storage_class)
-        verify_source_dvs_deleted(
-            vm=ready_combined_mode_stopped_vm, source_dv_names=combined_mode_stopped_vm_source_dvs
-        )
+        verify_vm_storage_class_updated(vm=running_vm_for_scmig_test, target_storage_class=target_storage_class)
+        verify_source_dvs_deleted(vm=running_vm_for_scmig_test, source_dv_names=running_vm_for_scmig_test_source_dvs)
+        verify_vm_storage_class_updated(vm=stopped_vm_for_scmig_test, target_storage_class=target_storage_class)
+        verify_source_dvs_deleted(vm=stopped_vm_for_scmig_test, source_dv_names=stopped_vm_for_scmig_test_source_dvs)
         assert combined_mode_mig_plan.exists, (
             f"Migration plan {combined_mode_mig_plan.name} should still exist after cleanup"
         )
@@ -145,11 +143,11 @@ class TestStorageMigrationRetentionPolicy:
     @pytest.mark.usefixtures("combined_mode_mig_migration")
     def test_spec_level_retention_policy_delete_source(
         self,
-        combined_mode_running_vm,
-        ready_combined_mode_stopped_vm,
+        running_vm_for_scmig_test,
+        stopped_vm_for_scmig_test,
         target_storage_class,
-        combined_mode_running_vm_source_dvs,
-        combined_mode_stopped_vm_source_dvs,
+        running_vm_for_scmig_test_source_dvs,
+        stopped_vm_for_scmig_test_source_dvs,
         combined_mode_mig_plan,
     ):
         """
@@ -168,12 +166,10 @@ class TestStorageMigrationRetentionPolicy:
             - Both VMs use the target storage class, their source volumes are deleted, and
               the migration plan remains available after cleanup
         """
-        verify_vm_storage_class_updated(vm=combined_mode_running_vm, target_storage_class=target_storage_class)
-        verify_source_dvs_deleted(vm=combined_mode_running_vm, source_dv_names=combined_mode_running_vm_source_dvs)
-        verify_vm_storage_class_updated(vm=ready_combined_mode_stopped_vm, target_storage_class=target_storage_class)
-        verify_source_dvs_deleted(
-            vm=ready_combined_mode_stopped_vm, source_dv_names=combined_mode_stopped_vm_source_dvs
-        )
+        verify_vm_storage_class_updated(vm=running_vm_for_scmig_test, target_storage_class=target_storage_class)
+        verify_source_dvs_deleted(vm=running_vm_for_scmig_test, source_dv_names=running_vm_for_scmig_test_source_dvs)
+        verify_vm_storage_class_updated(vm=stopped_vm_for_scmig_test, target_storage_class=target_storage_class)
+        verify_source_dvs_deleted(vm=stopped_vm_for_scmig_test, source_dv_names=stopped_vm_for_scmig_test_source_dvs)
         assert combined_mode_mig_plan.exists, (
             f"Migration plan {combined_mode_mig_plan.name} should still exist after cleanup"
         )
@@ -187,11 +183,11 @@ class TestStorageMigrationRetentionPolicy:
     @pytest.mark.usefixtures("combined_mode_mig_migration")
     def test_namespace_level_retention_policy_keep_source(
         self,
-        combined_mode_running_vm,
-        ready_combined_mode_stopped_vm,
+        running_vm_for_scmig_test,
+        stopped_vm_for_scmig_test,
         target_storage_class,
-        combined_mode_running_vm_source_dvs,
-        combined_mode_stopped_vm_source_dvs,
+        running_vm_for_scmig_test_source_dvs,
+        stopped_vm_for_scmig_test_source_dvs,
     ):
         """
         Verify namespace-level retentionPolicy=keepSource keeps source volumes.
@@ -208,10 +204,10 @@ class TestStorageMigrationRetentionPolicy:
         Expected:
             - Both VMs use the target storage class and their source volumes are kept
         """
-        verify_vm_storage_class_updated(vm=combined_mode_running_vm, target_storage_class=target_storage_class)
-        verify_source_dvs_exist(vm=combined_mode_running_vm, source_dv_names=combined_mode_running_vm_source_dvs)
-        verify_vm_storage_class_updated(vm=ready_combined_mode_stopped_vm, target_storage_class=target_storage_class)
-        verify_source_dvs_exist(vm=ready_combined_mode_stopped_vm, source_dv_names=combined_mode_stopped_vm_source_dvs)
+        verify_vm_storage_class_updated(vm=running_vm_for_scmig_test, target_storage_class=target_storage_class)
+        verify_source_dvs_exist(vm=running_vm_for_scmig_test, source_dv_names=running_vm_for_scmig_test_source_dvs)
+        verify_vm_storage_class_updated(vm=stopped_vm_for_scmig_test, target_storage_class=target_storage_class)
+        verify_source_dvs_exist(vm=stopped_vm_for_scmig_test, source_dv_names=stopped_vm_for_scmig_test_source_dvs)
 
     @pytest.mark.parametrize(
         "combined_mode_mig_plan",
@@ -222,11 +218,11 @@ class TestStorageMigrationRetentionPolicy:
     @pytest.mark.usefixtures("combined_mode_mig_migration")
     def test_spec_level_retention_policy_keep_source(
         self,
-        combined_mode_running_vm,
-        ready_combined_mode_stopped_vm,
+        running_vm_for_scmig_test,
+        stopped_vm_for_scmig_test,
         target_storage_class,
-        combined_mode_running_vm_source_dvs,
-        combined_mode_stopped_vm_source_dvs,
+        running_vm_for_scmig_test_source_dvs,
+        stopped_vm_for_scmig_test_source_dvs,
     ):
         """
         Verify plan-level retentionPolicy=keepSource keeps source volumes.
@@ -243,18 +239,18 @@ class TestStorageMigrationRetentionPolicy:
         Expected:
             - Both VMs use the target storage class and their source volumes are kept
         """
-        verify_vm_storage_class_updated(vm=combined_mode_running_vm, target_storage_class=target_storage_class)
-        verify_source_dvs_exist(vm=combined_mode_running_vm, source_dv_names=combined_mode_running_vm_source_dvs)
-        verify_vm_storage_class_updated(vm=ready_combined_mode_stopped_vm, target_storage_class=target_storage_class)
-        verify_source_dvs_exist(vm=ready_combined_mode_stopped_vm, source_dv_names=combined_mode_stopped_vm_source_dvs)
+        verify_vm_storage_class_updated(vm=running_vm_for_scmig_test, target_storage_class=target_storage_class)
+        verify_source_dvs_exist(vm=running_vm_for_scmig_test, source_dv_names=running_vm_for_scmig_test_source_dvs)
+        verify_vm_storage_class_updated(vm=stopped_vm_for_scmig_test, target_storage_class=target_storage_class)
+        verify_source_dvs_exist(vm=stopped_vm_for_scmig_test, source_dv_names=stopped_vm_for_scmig_test_source_dvs)
 
 
 @pytest.mark.parametrize(
     "source_storage_class, target_storage_class",
     [
         pytest.param(
-            {"source_storage_class": STORAGE_CLASS_MIGRATION_SOURCE},
-            {"target_storage_class": STORAGE_CLASS_MIGRATION_TARGET},
+            {"source_storage_class": py_config[STORAGE_CLASS_A]},
+            {"target_storage_class": py_config[STORAGE_CLASS_B]},
             id="source_a_target_b",
         ),
     ],
@@ -294,11 +290,11 @@ class TestStorageMigrationCombinedRetentionPolicy:
     @pytest.mark.usefixtures("combined_policy_mig_migration")
     def test_namespace_delete_overrides_plan_keep(
         self,
-        combined_policy_vm_first_ns,
-        combined_policy_vm_second_ns,
+        vm_first_ns_for_scmig_test,
+        vm_second_ns_for_scmig_test,
         target_storage_class,
-        combined_policy_source_dv_names_first_ns,
-        combined_policy_source_dv_names_second_ns,
+        source_dv_names_first_ns_for_scmig_test,
+        source_dv_names_second_ns_for_scmig_test,
         combined_policy_mig_plan,
     ):
         """
@@ -319,13 +315,13 @@ class TestStorageMigrationCombinedRetentionPolicy:
               volumes in the namespace without a namespace-level policy are kept (plan-level
               keepSource), and the migration plan remains available after cleanup
         """
-        verify_vm_storage_class_updated(vm=combined_policy_vm_first_ns, target_storage_class=target_storage_class)
+        verify_vm_storage_class_updated(vm=vm_first_ns_for_scmig_test, target_storage_class=target_storage_class)
         verify_source_dvs_deleted(
-            vm=combined_policy_vm_first_ns, source_dv_names=combined_policy_source_dv_names_first_ns
+            vm=vm_first_ns_for_scmig_test, source_dv_names=source_dv_names_first_ns_for_scmig_test
         )
-        verify_vm_storage_class_updated(vm=combined_policy_vm_second_ns, target_storage_class=target_storage_class)
+        verify_vm_storage_class_updated(vm=vm_second_ns_for_scmig_test, target_storage_class=target_storage_class)
         verify_source_dvs_exist(
-            vm=combined_policy_vm_second_ns, source_dv_names=combined_policy_source_dv_names_second_ns
+            vm=vm_second_ns_for_scmig_test, source_dv_names=source_dv_names_second_ns_for_scmig_test
         )
         assert combined_policy_mig_plan.exists, (
             f"Migration plan {combined_policy_mig_plan.name} should still exist after cleanup"
@@ -349,11 +345,11 @@ class TestStorageMigrationCombinedRetentionPolicy:
     @pytest.mark.usefixtures("combined_policy_mig_migration")
     def test_namespace_keep_overrides_plan_delete(
         self,
-        combined_policy_vm_first_ns,
-        combined_policy_vm_second_ns,
+        vm_first_ns_for_scmig_test,
+        vm_second_ns_for_scmig_test,
         target_storage_class,
-        combined_policy_source_dv_names_first_ns,
-        combined_policy_source_dv_names_second_ns,
+        source_dv_names_first_ns_for_scmig_test,
+        source_dv_names_second_ns_for_scmig_test,
         combined_policy_mig_plan,
     ):
         """
@@ -375,13 +371,11 @@ class TestStorageMigrationCombinedRetentionPolicy:
               deleted (plan-level deleteSource), and the migration plan remains available after
               cleanup
         """
-        verify_vm_storage_class_updated(vm=combined_policy_vm_first_ns, target_storage_class=target_storage_class)
-        verify_source_dvs_exist(
-            vm=combined_policy_vm_first_ns, source_dv_names=combined_policy_source_dv_names_first_ns
-        )
-        verify_vm_storage_class_updated(vm=combined_policy_vm_second_ns, target_storage_class=target_storage_class)
+        verify_vm_storage_class_updated(vm=vm_first_ns_for_scmig_test, target_storage_class=target_storage_class)
+        verify_source_dvs_exist(vm=vm_first_ns_for_scmig_test, source_dv_names=source_dv_names_first_ns_for_scmig_test)
+        verify_vm_storage_class_updated(vm=vm_second_ns_for_scmig_test, target_storage_class=target_storage_class)
         verify_source_dvs_deleted(
-            vm=combined_policy_vm_second_ns, source_dv_names=combined_policy_source_dv_names_second_ns
+            vm=vm_second_ns_for_scmig_test, source_dv_names=source_dv_names_second_ns_for_scmig_test
         )
         assert combined_policy_mig_plan.exists, (
             f"Migration plan {combined_policy_mig_plan.name} should still exist after cleanup"
@@ -401,11 +395,11 @@ class TestStorageMigrationCombinedRetentionPolicy:
     @pytest.mark.usefixtures("combined_policy_mig_migration")
     def test_namespace_and_plan_level_delete_source_retention_policy(
         self,
-        combined_policy_vm_first_ns,
-        combined_policy_vm_second_ns,
+        vm_first_ns_for_scmig_test,
+        vm_second_ns_for_scmig_test,
         target_storage_class,
-        combined_policy_source_dv_names_first_ns,
-        combined_policy_source_dv_names_second_ns,
+        source_dv_names_first_ns_for_scmig_test,
+        source_dv_names_second_ns_for_scmig_test,
         combined_policy_mig_plan,
     ):
         """
@@ -425,13 +419,13 @@ class TestStorageMigrationCombinedRetentionPolicy:
             - All source volumes are deleted and the migration plan remains available after
               cleanup
         """
-        verify_vm_storage_class_updated(vm=combined_policy_vm_first_ns, target_storage_class=target_storage_class)
+        verify_vm_storage_class_updated(vm=vm_first_ns_for_scmig_test, target_storage_class=target_storage_class)
         verify_source_dvs_deleted(
-            vm=combined_policy_vm_first_ns, source_dv_names=combined_policy_source_dv_names_first_ns
+            vm=vm_first_ns_for_scmig_test, source_dv_names=source_dv_names_first_ns_for_scmig_test
         )
-        verify_vm_storage_class_updated(vm=combined_policy_vm_second_ns, target_storage_class=target_storage_class)
+        verify_vm_storage_class_updated(vm=vm_second_ns_for_scmig_test, target_storage_class=target_storage_class)
         verify_source_dvs_deleted(
-            vm=combined_policy_vm_second_ns, source_dv_names=combined_policy_source_dv_names_second_ns
+            vm=vm_second_ns_for_scmig_test, source_dv_names=source_dv_names_second_ns_for_scmig_test
         )
         assert combined_policy_mig_plan.exists, (
             f"Migration plan {combined_policy_mig_plan.name} should still exist after cleanup"
@@ -451,11 +445,11 @@ class TestStorageMigrationCombinedRetentionPolicy:
     @pytest.mark.usefixtures("combined_policy_mig_migration")
     def test_namespace_and_plan_level_keep_source_retention_policy(
         self,
-        combined_policy_vm_first_ns,
-        combined_policy_vm_second_ns,
+        vm_first_ns_for_scmig_test,
+        vm_second_ns_for_scmig_test,
         target_storage_class,
-        combined_policy_source_dv_names_first_ns,
-        combined_policy_source_dv_names_second_ns,
+        source_dv_names_first_ns_for_scmig_test,
+        source_dv_names_second_ns_for_scmig_test,
     ):
         """
         Verify namespace-level and plan-level keepSource together keep all source volumes.
@@ -473,13 +467,11 @@ class TestStorageMigrationCombinedRetentionPolicy:
         Expected:
             - All source volumes are kept
         """
-        verify_vm_storage_class_updated(vm=combined_policy_vm_first_ns, target_storage_class=target_storage_class)
+        verify_vm_storage_class_updated(vm=vm_first_ns_for_scmig_test, target_storage_class=target_storage_class)
+        verify_source_dvs_exist(vm=vm_first_ns_for_scmig_test, source_dv_names=source_dv_names_first_ns_for_scmig_test)
+        verify_vm_storage_class_updated(vm=vm_second_ns_for_scmig_test, target_storage_class=target_storage_class)
         verify_source_dvs_exist(
-            vm=combined_policy_vm_first_ns, source_dv_names=combined_policy_source_dv_names_first_ns
-        )
-        verify_vm_storage_class_updated(vm=combined_policy_vm_second_ns, target_storage_class=target_storage_class)
-        verify_source_dvs_exist(
-            vm=combined_policy_vm_second_ns, source_dv_names=combined_policy_source_dv_names_second_ns
+            vm=vm_second_ns_for_scmig_test, source_dv_names=source_dv_names_second_ns_for_scmig_test
         )
 
 
@@ -487,7 +479,7 @@ class TestStorageMigrationCombinedRetentionPolicy:
     "source_storage_class",
     [
         pytest.param(
-            {"source_storage_class": STORAGE_CLASS_MIGRATION_SOURCE},
+            {"source_storage_class": py_config[STORAGE_CLASS_A]},
             id="source_a",
         ),
     ],
@@ -510,7 +502,8 @@ class TestStorageMigrationFailureRetentionPolicy:
         indirect=True,
     )
     @pytest.mark.xfail(
-        reason=f"{QUARANTINED}: Not clarified Failing migration cases, wait for product clarification", run=False
+        reason=f"{QUARANTINED}: Not clarified Failing migration cases, wait for product clarification, CNV-98407",
+        run=False,
     )
     @pytest.mark.polarion("CNV-16309")
     @pytest.mark.usefixtures("failure_mig_migration")
@@ -542,7 +535,8 @@ class TestStorageMigrationFailureRetentionPolicy:
         indirect=True,
     )
     @pytest.mark.xfail(
-        reason=f"{QUARANTINED}: Not clarified Failing migration cases, wait for product clarification", run=False
+        reason=f"{QUARANTINED}: Not clarified Failing migration cases, wait for product clarification, CNV-98407",
+        run=False,
     )
     @pytest.mark.polarion("CNV-16310")
     @pytest.mark.usefixtures("failure_mig_migration")
