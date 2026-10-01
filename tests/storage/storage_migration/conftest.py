@@ -1,4 +1,5 @@
 import contextlib
+import logging
 import shlex
 
 import pytest
@@ -50,6 +51,8 @@ from utilities.virt import (
     running_vm,
     vm_instance_from_template,
 )
+
+LOGGER = logging.getLogger(__name__)
 
 DEFAULT_DV_SIZE = "1Gi"
 
@@ -428,7 +431,7 @@ def cleaned_up_standalone_data_volume_after_storage_migration(unprivileged_clien
 
 
 @pytest.fixture()
-def running_vm_for_scmig_test(
+def running_vm_for_scmig_test_first_ns(
     unprivileged_client, namespace, fedora_data_source_scope_module, source_storage_class, cpu_for_migration
 ):
     yield from create_fedora_vm_with_instance_type(
@@ -442,7 +445,7 @@ def running_vm_for_scmig_test(
 
 
 @pytest.fixture()
-def stopped_vm_for_scmig_test(
+def stopped_vm_for_scmig_test_first_ns(
     unprivileged_client, namespace, fedora_data_source_scope_module, source_storage_class, cpu_for_migration
 ):
     vm_creator = create_fedora_vm_with_instance_type(
@@ -461,13 +464,13 @@ def stopped_vm_for_scmig_test(
 
 
 @pytest.fixture()
-def running_vm_for_scmig_test_source_dvs(running_vm_for_scmig_test):
-    yield get_vm_dv_names(vm=running_vm_for_scmig_test)
+def running_vm_for_scmig_test_source_dvs(running_vm_for_scmig_test_first_ns):
+    yield get_vm_dv_names(vm=running_vm_for_scmig_test_first_ns)
 
 
 @pytest.fixture()
-def stopped_vm_for_scmig_test_source_dvs(stopped_vm_for_scmig_test):
-    yield get_vm_dv_names(vm=stopped_vm_for_scmig_test)
+def stopped_vm_for_scmig_test_source_dvs(stopped_vm_for_scmig_test_first_ns):
+    yield get_vm_dv_names(vm=stopped_vm_for_scmig_test_first_ns)
 
 
 @pytest.fixture()
@@ -476,15 +479,19 @@ def combined_mode_mig_plan(
     admin_client,
     migration_resources_namespace,
     target_storage_class,
-    running_vm_for_scmig_test,
-    stopped_vm_for_scmig_test,
+    running_vm_for_scmig_test_first_ns,
+    stopped_vm_for_scmig_test_first_ns,
     unique_suffix_scope_function,
 ):
     spec_retention_policy = request.param.get("spec_retention_policy")
     ns_retention_policy = request.param.get("ns_retention_policy")
+    LOGGER.info(
+        f"Creating migration plan with spec-level retentionPolicy={spec_retention_policy} and "
+        f"namespace-level retentionPolicy={ns_retention_policy}"
+    )
 
     namespaces_spec = build_namespaces_spec_for_storage_migration(
-        vms=[running_vm_for_scmig_test, stopped_vm_for_scmig_test],
+        vms=[running_vm_for_scmig_test_first_ns, stopped_vm_for_scmig_test_first_ns],
         target_storage_class=target_storage_class,
     )
     if ns_retention_policy:
@@ -528,21 +535,7 @@ def second_vm_namespace(admin_client, unprivileged_client, unique_suffix):
 
 
 @pytest.fixture()
-def vm_first_ns_for_scmig_test(
-    unprivileged_client, namespace, fedora_data_source_scope_module, source_storage_class, cpu_for_migration
-):
-    yield from create_fedora_vm_with_instance_type(
-        unprivileged_client=unprivileged_client,
-        namespace_name=namespace.name,
-        data_source=fedora_data_source_scope_module,
-        source_storage_class=source_storage_class,
-        cpu_for_migration=cpu_for_migration,
-        vm_name="policy-vm-ns1",
-    )
-
-
-@pytest.fixture()
-def vm_second_ns_for_scmig_test(
+def stopped_vm_for_scmig_test_second_ns(
     unprivileged_client, second_vm_namespace, fedora_data_source_scope_module, source_storage_class, cpu_for_migration
 ):
     yield from create_fedora_vm_with_instance_type(
@@ -556,9 +549,9 @@ def vm_second_ns_for_scmig_test(
 
 
 @pytest.fixture()
-def ready_vms_for_scmig_test(vm_first_ns_for_scmig_test, vm_second_ns_for_scmig_test):
-    vm_second_ns_for_scmig_test.stop(wait=True)
-    yield [vm_first_ns_for_scmig_test, vm_second_ns_for_scmig_test]
+def ready_vms_for_scmig_test(running_vm_for_scmig_test_first_ns, stopped_vm_for_scmig_test_second_ns):
+    stopped_vm_for_scmig_test_second_ns.stop(wait=True)
+    yield [running_vm_for_scmig_test_first_ns, stopped_vm_for_scmig_test_second_ns]
 
 
 @pytest.fixture()
@@ -572,24 +565,26 @@ def source_dv_names_second_ns_for_scmig_test(ready_vms_for_scmig_test):
 
 
 @pytest.fixture()
-def combined_policy_mig_plan(
+def combined_policy_and_combined_mode_mig_plan(
     request,
     admin_client,
     migration_resources_namespace,
     target_storage_class,
     ready_vms_for_scmig_test,
-    source_dv_names_first_ns_for_scmig_test,
-    source_dv_names_second_ns_for_scmig_test,
     unique_suffix_scope_function,
 ):
     spec_retention_policy = request.param["spec_retention_policy"]
-    ns_override_retention_policy = request.param["ns_override_retention_policy"]
+    first_ns_override_retention_policy = request.param["first_ns_override_retention_policy"]
+    LOGGER.info(
+        f"Creating migration plan with spec-level retentionPolicy={spec_retention_policy} and "
+        f"first-namespace-level override retentionPolicy={first_ns_override_retention_policy}"
+    )
 
     namespaces_spec = build_namespaces_spec_for_storage_migration(
         vms=ready_vms_for_scmig_test,
         target_storage_class=target_storage_class,
     )
-    namespaces_spec[0]["retentionPolicy"] = ns_override_retention_policy
+    namespaces_spec[0]["retentionPolicy"] = first_ns_override_retention_policy
 
     with MultiNamespaceVirtualMachineStorageMigrationPlan(
         name=f"combined-policy-plan-{unique_suffix_scope_function}",
@@ -604,15 +599,17 @@ def combined_policy_mig_plan(
 @pytest.fixture()
 def combined_policy_mig_migration(
     admin_client,
-    combined_policy_mig_plan,
+    combined_policy_and_combined_mode_mig_plan,
     source_dv_names_first_ns_for_scmig_test,
     source_dv_names_second_ns_for_scmig_test,
 ):
     with MultiNamespaceVirtualMachineStorageMigration(
-        name=f"mig-{combined_policy_mig_plan.name}",
-        namespace=combined_policy_mig_plan.namespace,
+        name=f"mig-{combined_policy_and_combined_mode_mig_plan.name}",
+        namespace=combined_policy_and_combined_mode_mig_plan.namespace,
         client=admin_client,
-        multi_namespace_virtual_machine_storage_migration_plan_ref={"name": combined_policy_mig_plan.name},
+        multi_namespace_virtual_machine_storage_migration_plan_ref={
+            "name": combined_policy_and_combined_mode_mig_plan.name
+        },
     ) as mig_migration:
         wait_for_storage_migration_phase(mig_migration=mig_migration, expected_phase=mig_migration.Status.COMPLETED)
         yield mig_migration
