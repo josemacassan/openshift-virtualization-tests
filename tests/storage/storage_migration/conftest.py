@@ -526,10 +526,12 @@ def combined_mode_mig_migration(
         try:
             wait_for_storage_migration_phase(mig_migration=mig_migration, expected_phase=mig_migration.Status.COMPLETED)
         except StorageMigrationError:
-            if any(
-                namespace.get("phase") == "WaitForLiveMigrationToComplete"
+            non_completed_phases = {
+                namespace.get("phase")
                 for namespace in (mig_migration.instance.status.namespaces or [])
-            ) and is_jira_open(jira_id="CNV-98587"):
+                if namespace.get("phase") != mig_migration.Status.COMPLETED
+            }
+            if non_completed_phases == {"WaitForLiveMigrationToComplete"} and is_jira_open(jira_id="CNV-98587"):
                 pytest.xfail(reason="Offline VM storage migration stuck in WaitForLiveMigrationToComplete, CNV-98587")
             raise
         yield mig_migration
@@ -624,10 +626,12 @@ def combined_policy_mig_migration(
         try:
             wait_for_storage_migration_phase(mig_migration=mig_migration, expected_phase=mig_migration.Status.COMPLETED)
         except StorageMigrationError:
-            if any(
-                namespace.get("phase") == "WaitForLiveMigrationToComplete"
+            non_completed_phases = {
+                namespace.get("phase")
                 for namespace in (mig_migration.instance.status.namespaces or [])
-            ) and is_jira_open(jira_id="CNV-98587"):
+                if namespace.get("phase") != mig_migration.Status.COMPLETED
+            }
+            if non_completed_phases == {"WaitForLiveMigrationToComplete"} and is_jira_open(jira_id="CNV-98587"):
                 pytest.xfail(reason="Offline VM storage migration stuck in WaitForLiveMigrationToComplete, CNV-98587")
             raise
         yield mig_migration
