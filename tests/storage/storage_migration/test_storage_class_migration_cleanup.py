@@ -77,6 +77,7 @@ class TestStorageMigrationRetentionPolicy:
         """
         Verify default behavior keeps source volumes when retentionPolicy is not specified.
 
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
         STP Requirement: Default cleanup policy (P1)
 
         Preconditions:
@@ -121,6 +122,7 @@ class TestStorageMigrationRetentionPolicy:
         """
         Verify namespace-level retentionPolicy=deleteSource deletes source volumes.
 
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
         STP Requirement: Namespace-level cleanup policy (P0)
 
         Preconditions:
@@ -169,6 +171,7 @@ class TestStorageMigrationRetentionPolicy:
         """
         Verify plan-level retentionPolicy=deleteSource deletes source volumes.
 
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
         STP Requirement: Plan-level cleanup policy (P0)
 
         Preconditions:
@@ -216,6 +219,7 @@ class TestStorageMigrationRetentionPolicy:
         """
         Verify namespace-level retentionPolicy=keepSource keeps source volumes.
 
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
         STP Requirement: Namespace-level cleanup policy (P0)
 
         Preconditions:
@@ -259,6 +263,7 @@ class TestStorageMigrationRetentionPolicy:
         """
         Verify plan-level retentionPolicy=keepSource keeps source volumes.
 
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
         STP Requirement: Plan-level cleanup policy (P0)
 
         Preconditions:
@@ -340,6 +345,7 @@ class TestStorageMigrationCombinedRetentionPolicy:
         """
         Verify namespace-level deleteSource overrides plan-level keepSource for that namespace.
 
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
         STP Requirement: Combined namespace and plan-level cleanup policies (P0)
 
         Preconditions:
@@ -399,6 +405,7 @@ class TestStorageMigrationCombinedRetentionPolicy:
         """
         Verify namespace-level keepSource overrides plan-level deleteSource for that namespace.
 
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
         STP Requirement: Combined namespace and plan-level cleanup policies (P0)
 
         Preconditions:
@@ -455,6 +462,7 @@ class TestStorageMigrationCombinedRetentionPolicy:
         """
         Verify namespace-level and plan-level deleteSource together delete all source volumes.
 
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
         STP Requirement: Combined namespace and plan-level cleanup policies (P0)
 
         Preconditions:
@@ -508,6 +516,7 @@ class TestStorageMigrationCombinedRetentionPolicy:
         """
         Verify namespace-level and plan-level keepSource together keep all source volumes.
 
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
         STP Requirement: Combined namespace and plan-level cleanup policies (P0)
 
         Preconditions:
@@ -575,6 +584,7 @@ class TestStorageMigrationFailureRetentionPolicy:
         """
         [NEGATIVE] Verify source volumes are retained when migration fails with retentionPolicy=deleteSource.
 
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
         STP Requirement: Source volumes preserved on migration failure (P2)
 
         Preconditions:
@@ -608,6 +618,7 @@ class TestStorageMigrationFailureRetentionPolicy:
         """
         [NEGATIVE] Verify source volumes are retained when migration fails with retentionPolicy=keepSource.
 
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
         STP Requirement: Source volumes preserved on migration failure (P2)
 
         Preconditions:
