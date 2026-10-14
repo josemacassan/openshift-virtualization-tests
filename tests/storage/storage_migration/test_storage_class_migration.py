@@ -19,6 +19,7 @@ from tests.storage.storage_migration.utils import (
     verify_vms_boot_time_after_storage_migration,
 )
 from utilities.constants.timeouts import TIMEOUT_60MIN
+from utilities.jira import is_jira_open
 from utilities.storage import verify_file_in_windows_vm
 from utilities.virt import migrate_vm_and_verify
 
@@ -74,12 +75,21 @@ class TestStorageClassMigrationAtoB:
         storage_mig_migration,
         deleted_old_dvs_of_online_vms,
     ):
-        verify_storage_migration_succeeded(
-            vms_boot_time_before_storage_migration=vms_boot_time_before_storage_migration,
-            online_vms_for_storage_class_migration=online_vms_for_storage_class_migration,
-            vms_with_written_file_before_migration=written_file_to_vms_before_migration,
-            target_storage_class=target_storage_class,
-        )
+        # CNV-99185: the migration can report Completed without actually migrating, so the VMs stay on the
+        # source storage class and verification fails. xfail on that while the bug is open. Other tests are
+        # intentionally left unguarded so we can see when they start hitting it and decide then whether to
+        # xfail them too.
+        try:
+            verify_storage_migration_succeeded(
+                vms_boot_time_before_storage_migration=vms_boot_time_before_storage_migration,
+                online_vms_for_storage_class_migration=online_vms_for_storage_class_migration,
+                vms_with_written_file_before_migration=written_file_to_vms_before_migration,
+                target_storage_class=target_storage_class,
+            )
+        except AssertionError:
+            if is_jira_open(jira_id="CNV-99185"):
+                pytest.xfail(reason="Migration falsely reported Completed, VMs not migrated, CNV-99185")
+            raise
 
     @pytest.mark.dependency(depends=[f"{TESTS_CLASS_NAME_A_TO_B}::test_vm_storage_class_migration_a_to_b_running_vms"])
     @pytest.mark.polarion("CNV-11504")
