@@ -270,11 +270,24 @@ def vms_boot_time_before_storage_migration(online_vms_for_storage_class_migratio
 
 
 @pytest.fixture(scope="class")
-def deleted_old_dvs_of_online_vms(unprivileged_client, storage_mig_migration, online_vms_for_storage_class_migration):
+def deleted_old_dvs_of_online_vms(
+    request, unprivileged_client, storage_mig_migration, online_vms_for_storage_class_migration
+):
     # Wait for the storage migration to complete before reading the migrated source PVC name.
     wait_for_storage_migration_phase(mig_migration=storage_mig_migration)
     for vm in online_vms_for_storage_class_migration:
-        dv_name = vm.instance.status.volumeUpdateState.volumeMigrationState.migratedVolumes[0].sourcePVCInfo.claimName
+        try:
+            dv_name = vm.instance.status.volumeUpdateState.volumeMigrationState.migratedVolumes[
+                0
+            ].sourcePVCInfo.claimName
+        except AttributeError, IndexError, TypeError:
+            # CNV-99185: the migration can report Completed without actually migrating, so the migratedVolumes
+            # status is empty and the migrated source PVC name cannot be read. xfail the affected test while the
+            # bug is open. Other tests sharing this fixture are intentionally left unguarded so we can see when
+            # they start hitting it and decide then whether to xfail them too.
+            if request.cls.__name__ == "TestStorageClassMigrationAtoB" and is_jira_open(jira_id="CNV-99185"):
+                pytest.xfail(reason="Migration falsely reported Completed, VMs not migrated, CNV-99185")
+            raise
         dv = DataVolume(client=unprivileged_client, name=dv_name, namespace=vm.namespace, ensure_exists=True)
         assert dv.delete(wait=True)
 
