@@ -276,18 +276,19 @@ def deleted_old_dvs_of_online_vms(
     # Wait for the storage migration to complete before reading the migrated source PVC name.
     wait_for_storage_migration_phase(mig_migration=storage_mig_migration)
     for vm in online_vms_for_storage_class_migration:
-        try:
-            dv_name = vm.instance.status.volumeUpdateState.volumeMigrationState.migratedVolumes[
-                0
-            ].sourcePVCInfo.claimName
-        except AttributeError, IndexError, TypeError:
-            # CNV-99185: the migration can report Completed without actually migrating, so the migratedVolumes
-            # status is empty and the migrated source PVC name cannot be read. xfail the affected test while the
-            # bug is open. Other tests sharing this fixture are intentionally left unguarded so we can see when
-            # they start hitting it and decide then whether to xfail them too.
-            if request.cls.__name__ == "TestStorageClassMigrationAtoB" and is_jira_open(jira_id="CNV-99185"):
-                pytest.xfail(reason="Migration falsely reported Completed, VMs not migrated, CNV-99185")
-            raise
+        migrated_volumes = vm.instance.status.volumeUpdateState.volumeMigrationState.migratedVolumes
+        # CNV-99185: the migration can report Completed while migratedVolumes stays empty, so the migrated
+        # source PVC name cannot be read. Only an empty list matches this bug; any other lookup failure above
+        # (missing status field, None value) is re-raised untouched. xfail the affected test while the bug is
+        # open. Other tests sharing this fixture are intentionally left unguarded so we can see when they start
+        # hitting it and decide then whether to xfail them too.
+        if (
+            migrated_volumes == []
+            and request.cls.__name__ == "TestStorageClassMigrationAtoB"
+            and is_jira_open(jira_id="CNV-99185")
+        ):
+            pytest.xfail(reason="Migration falsely reported Completed, VMs not migrated, CNV-99185")
+        dv_name = migrated_volumes[0].sourcePVCInfo.claimName
         dv = DataVolume(client=unprivileged_client, name=dv_name, namespace=vm.namespace, ensure_exists=True)
         assert dv.delete(wait=True)
 
