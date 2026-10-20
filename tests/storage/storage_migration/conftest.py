@@ -273,12 +273,12 @@ def vms_boot_time_before_storage_migration(online_vms_for_storage_class_migratio
 def deleted_old_dvs_of_online_vms(unprivileged_client, storage_mig_migration, online_vms_for_storage_class_migration):
     for vm in online_vms_for_storage_class_migration:
         volume_update_state = vm.instance.status.volumeUpdateState
-        # CNV-99185: the migration can report Completed while volumeUpdateState stays None, so the migrated
+        # CNV-98738: the migration can report Completed while volumeUpdateState stays None, so the migrated
         # source PVC name cannot be read. Only a None volumeUpdateState matches this bug; any other lookup
         # failure below is re-raised untouched. xfail while the bug is open, for every test sharing this
         # fixture.
-        if volume_update_state is None and is_jira_open(jira_id="CNV-99185"):
-            pytest.xfail(reason="Migration falsely reported Completed, VMs not migrated, CNV-99185")
+        if volume_update_state is None and is_jira_open(jira_id="CNV-98738"):
+            pytest.xfail(reason="Migration falsely reported Completed, VMs not migrated, CNV-98738")
         dv_name = volume_update_state.volumeMigrationState.migratedVolumes[0].sourcePVCInfo.claimName
         dv = DataVolume(client=unprivileged_client, name=dv_name, namespace=vm.namespace, ensure_exists=True)
         assert dv.delete(wait=True)
