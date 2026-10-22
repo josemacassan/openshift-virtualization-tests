@@ -17,7 +17,10 @@ import pytest
 from pytest_testconfig import config as py_config
 
 from tests.storage.constants import STORAGE_CLASS_A, STORAGE_CLASS_B
-from tests.storage.storage_migration.constants import DELETE_SOURCE, KEEP_SOURCE
+from tests.storage.storage_migration.constants import (
+    DELETE_SOURCE,
+    KEEP_SOURCE,
+)
 from tests.storage.storage_migration.utils import (
     verify_source_dvs_deleted,
     verify_source_dvs_exist,
@@ -33,14 +36,34 @@ from utilities.constants.pytest import QUARANTINED
             {"source_storage_class": py_config[STORAGE_CLASS_A]},
             {"target_storage_class": py_config[STORAGE_CLASS_B]},
             id="source_a_target_b",
-        )
+        ),
     ],
     indirect=True,
 )
 class TestStorageMigrationRetentionPolicy:
-    """Test retention policies for online and offline migrations."""
+    """
+    Test retentionPolicy functionality for MultiNamespaceVirtualMachineStorageMigrationPlan.
 
-    @pytest.mark.parametrize("combined_mode_mig_plan", [pytest.param({}, id="default")], indirect=True)
+    STP Traceability: CNV-73509 (P0, P1)
+
+    Preconditions:
+      - Running VM (online migration) with source PVC/DataVolume
+      - Stopped VM (offline migration) with source PVC/DataVolume
+
+    Steps:
+      - Configure the retention policy at namespace level or at plan spec level
+      - Execute the storage migration plan and wait for it to complete
+
+    Expected:
+      - The VM storage class is updated to the target, and source volumes are kept or
+        deleted according to the configured retention policy
+    """
+
+    @pytest.mark.parametrize(
+        "combined_mode_mig_plan",
+        [pytest.param({}, id="default")],
+        indirect=True,
+    )
     @pytest.mark.polarion("CNV-16297")
     @pytest.mark.usefixtures("combined_mode_mig_migration")
     def test_retention_policy_default_behavior(
@@ -51,6 +74,22 @@ class TestStorageMigrationRetentionPolicy:
         running_vm_for_scmig_test_source_dvs,
         stopped_vm_for_scmig_test_source_dvs,
     ):
+        """
+        Verify default behavior keeps source volumes when retentionPolicy is not specified.
+
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
+        STP Requirement: Default cleanup policy (P1)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume
+            - Stopped VM (offline migration) with source PVC/DataVolume
+
+        Steps:
+            - Execute the migration plan without any retentionPolicy configured
+
+        Expected:
+            - Both VMs use the target storage class and their source volumes are kept
+        """
         verify_vm_storage_class_updated(
             vm=running_vm_for_scmig_test_first_ns, target_storage_class=target_storage_class
         )
@@ -65,7 +104,9 @@ class TestStorageMigrationRetentionPolicy:
         )
 
     @pytest.mark.parametrize(
-        "combined_mode_mig_plan", [pytest.param({"ns_retention_policy": DELETE_SOURCE}, id="ns_delete")], indirect=True
+        "combined_mode_mig_plan",
+        [pytest.param({"ns_retention_policy": DELETE_SOURCE}, id="ns_delete")],
+        indirect=True,
     )
     @pytest.mark.polarion("CNV-16298")
     @pytest.mark.usefixtures("combined_mode_mig_migration")
@@ -78,12 +119,35 @@ class TestStorageMigrationRetentionPolicy:
         stopped_vm_for_scmig_test_source_dvs,
         combined_mode_mig_plan,
     ):
-        for vm, source_dvs in (
-            (running_vm_for_scmig_test_first_ns, running_vm_for_scmig_test_source_dvs),
-            (stopped_vm_for_scmig_test_first_ns, stopped_vm_for_scmig_test_source_dvs),
-        ):
-            verify_vm_storage_class_updated(vm=vm, target_storage_class=target_storage_class)
-            verify_source_dvs_deleted(vm=vm, source_dv_names=source_dvs)
+        """
+        Verify namespace-level retentionPolicy=deleteSource deletes source volumes.
+
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
+        STP Requirement: Namespace-level cleanup policy (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume
+            - Stopped VM (offline migration) with source PVC/DataVolume
+
+        Steps:
+            - Execute the migration plan with namespace-level retentionPolicy=deleteSource
+
+        Expected:
+            - Both VMs use the target storage class, their source volumes are deleted, and
+              the migration plan remains available after cleanup
+        """
+        verify_vm_storage_class_updated(
+            vm=running_vm_for_scmig_test_first_ns, target_storage_class=target_storage_class
+        )
+        verify_source_dvs_deleted(
+            vm=running_vm_for_scmig_test_first_ns, source_dv_names=running_vm_for_scmig_test_source_dvs
+        )
+        verify_vm_storage_class_updated(
+            vm=stopped_vm_for_scmig_test_first_ns, target_storage_class=target_storage_class
+        )
+        verify_source_dvs_deleted(
+            vm=stopped_vm_for_scmig_test_first_ns, source_dv_names=stopped_vm_for_scmig_test_source_dvs
+        )
         assert combined_mode_mig_plan.exists, (
             f"Migration plan {combined_mode_mig_plan.name} should still exist after cleanup"
         )
@@ -104,18 +168,43 @@ class TestStorageMigrationRetentionPolicy:
         stopped_vm_for_scmig_test_source_dvs,
         combined_mode_mig_plan,
     ):
-        for vm, source_dvs in (
-            (running_vm_for_scmig_test_first_ns, running_vm_for_scmig_test_source_dvs),
-            (stopped_vm_for_scmig_test_first_ns, stopped_vm_for_scmig_test_source_dvs),
-        ):
-            verify_vm_storage_class_updated(vm=vm, target_storage_class=target_storage_class)
-            verify_source_dvs_deleted(vm=vm, source_dv_names=source_dvs)
+        """
+        Verify plan-level retentionPolicy=deleteSource deletes source volumes.
+
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
+        STP Requirement: Plan-level cleanup policy (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume
+            - Stopped VM (offline migration) with source PVC/DataVolume
+
+        Steps:
+            - Execute the migration plan with plan-level (spec) retentionPolicy=deleteSource
+
+        Expected:
+            - Both VMs use the target storage class, their source volumes are deleted, and
+              the migration plan remains available after cleanup
+        """
+        verify_vm_storage_class_updated(
+            vm=running_vm_for_scmig_test_first_ns, target_storage_class=target_storage_class
+        )
+        verify_source_dvs_deleted(
+            vm=running_vm_for_scmig_test_first_ns, source_dv_names=running_vm_for_scmig_test_source_dvs
+        )
+        verify_vm_storage_class_updated(
+            vm=stopped_vm_for_scmig_test_first_ns, target_storage_class=target_storage_class
+        )
+        verify_source_dvs_deleted(
+            vm=stopped_vm_for_scmig_test_first_ns, source_dv_names=stopped_vm_for_scmig_test_source_dvs
+        )
         assert combined_mode_mig_plan.exists, (
             f"Migration plan {combined_mode_mig_plan.name} should still exist after cleanup"
         )
 
     @pytest.mark.parametrize(
-        "combined_mode_mig_plan", [pytest.param({"ns_retention_policy": KEEP_SOURCE}, id="ns_keep")], indirect=True
+        "combined_mode_mig_plan",
+        [pytest.param({"ns_retention_policy": KEEP_SOURCE}, id="ns_keep")],
+        indirect=True,
     )
     @pytest.mark.polarion("CNV-16301")
     @pytest.mark.usefixtures("combined_mode_mig_migration")
@@ -127,15 +216,39 @@ class TestStorageMigrationRetentionPolicy:
         running_vm_for_scmig_test_source_dvs,
         stopped_vm_for_scmig_test_source_dvs,
     ):
-        for vm, source_dvs in (
-            (running_vm_for_scmig_test_first_ns, running_vm_for_scmig_test_source_dvs),
-            (stopped_vm_for_scmig_test_first_ns, stopped_vm_for_scmig_test_source_dvs),
-        ):
-            verify_vm_storage_class_updated(vm=vm, target_storage_class=target_storage_class)
-            verify_source_dvs_exist(vm=vm, source_dv_names=source_dvs)
+        """
+        Verify namespace-level retentionPolicy=keepSource keeps source volumes.
+
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
+        STP Requirement: Namespace-level cleanup policy (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume
+            - Stopped VM (offline migration) with source PVC/DataVolume
+
+        Steps:
+            - Execute the migration plan with namespace-level retentionPolicy=keepSource
+
+        Expected:
+            - Both VMs use the target storage class and their source volumes are kept
+        """
+        verify_vm_storage_class_updated(
+            vm=running_vm_for_scmig_test_first_ns, target_storage_class=target_storage_class
+        )
+        verify_source_dvs_exist(
+            vm=running_vm_for_scmig_test_first_ns, source_dv_names=running_vm_for_scmig_test_source_dvs
+        )
+        verify_vm_storage_class_updated(
+            vm=stopped_vm_for_scmig_test_first_ns, target_storage_class=target_storage_class
+        )
+        verify_source_dvs_exist(
+            vm=stopped_vm_for_scmig_test_first_ns, source_dv_names=stopped_vm_for_scmig_test_source_dvs
+        )
 
     @pytest.mark.parametrize(
-        "combined_mode_mig_plan", [pytest.param({"spec_retention_policy": KEEP_SOURCE}, id="spec_keep")], indirect=True
+        "combined_mode_mig_plan",
+        [pytest.param({"spec_retention_policy": KEEP_SOURCE}, id="spec_keep")],
+        indirect=True,
     )
     @pytest.mark.polarion("CNV-16302")
     @pytest.mark.usefixtures("combined_mode_mig_migration")
@@ -147,12 +260,34 @@ class TestStorageMigrationRetentionPolicy:
         running_vm_for_scmig_test_source_dvs,
         stopped_vm_for_scmig_test_source_dvs,
     ):
-        for vm, source_dvs in (
-            (running_vm_for_scmig_test_first_ns, running_vm_for_scmig_test_source_dvs),
-            (stopped_vm_for_scmig_test_first_ns, stopped_vm_for_scmig_test_source_dvs),
-        ):
-            verify_vm_storage_class_updated(vm=vm, target_storage_class=target_storage_class)
-            verify_source_dvs_exist(vm=vm, source_dv_names=source_dvs)
+        """
+        Verify plan-level retentionPolicy=keepSource keeps source volumes.
+
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
+        STP Requirement: Plan-level cleanup policy (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume
+            - Stopped VM (offline migration) with source PVC/DataVolume
+
+        Steps:
+            - Execute the migration plan with plan-level (spec) retentionPolicy=keepSource
+
+        Expected:
+            - Both VMs use the target storage class and their source volumes are kept
+        """
+        verify_vm_storage_class_updated(
+            vm=running_vm_for_scmig_test_first_ns, target_storage_class=target_storage_class
+        )
+        verify_source_dvs_exist(
+            vm=running_vm_for_scmig_test_first_ns, source_dv_names=running_vm_for_scmig_test_source_dvs
+        )
+        verify_vm_storage_class_updated(
+            vm=stopped_vm_for_scmig_test_first_ns, target_storage_class=target_storage_class
+        )
+        verify_source_dvs_exist(
+            vm=stopped_vm_for_scmig_test_first_ns, source_dv_names=stopped_vm_for_scmig_test_source_dvs
+        )
 
 
 @pytest.mark.parametrize(
@@ -162,12 +297,29 @@ class TestStorageMigrationRetentionPolicy:
             {"source_storage_class": py_config[STORAGE_CLASS_A]},
             {"target_storage_class": py_config[STORAGE_CLASS_B]},
             id="source_a_target_b",
-        )
+        ),
     ],
     indirect=True,
 )
 class TestStorageMigrationCombinedRetentionPolicy:
-    """Test precedence of namespace and plan retention policies."""
+    """
+    Test combination of retentionPolicy for MultiNamespaceVirtualMachineStorageMigrationPlan.
+
+    STP Traceability: CNV-73509 (P0)
+    Note: Namespace-level policy overrides plan-level policy for that namespace.
+
+    Preconditions:
+      - Running VM (online migration) with source PVC/DataVolume in first namespace
+      - Stopped VM (offline migration) with source PVC/DataVolume in second namespace
+
+    Steps:
+      - Configure conflicting retention policies at namespace level and at plan spec level
+      - Execute the storage migration plan and wait for it to complete
+
+    Expected:
+      - The VM storage class is updated to the target, and the namespace-level retention
+        policy takes precedence over the plan-level policy for that namespace
+    """
 
     @pytest.mark.parametrize(
         "combined_policy_and_combined_mode_mig_plan",
@@ -175,7 +327,7 @@ class TestStorageMigrationCombinedRetentionPolicy:
             pytest.param(
                 {"spec_retention_policy": KEEP_SOURCE, "first_ns_override_retention_policy": DELETE_SOURCE},
                 id="spec_keep_ns_delete",
-            )
+            ),
         ],
         indirect=True,
     )
@@ -190,6 +342,25 @@ class TestStorageMigrationCombinedRetentionPolicy:
         source_dv_names_second_ns_for_scmig_test,
         combined_policy_and_combined_mode_mig_plan,
     ):
+        """
+        Verify namespace-level deleteSource overrides plan-level keepSource for that namespace.
+
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
+        STP Requirement: Combined namespace and plan-level cleanup policies (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume in first namespace
+            - Stopped VM (offline migration) with source PVC/DataVolume in second namespace
+
+        Steps:
+            - Execute the migration plan with plan-level retentionPolicy=keepSource and
+              namespace-level retentionPolicy=deleteSource for the first namespace
+
+        Expected:
+            - Source volumes in the namespace with deleteSource are deleted while source
+              volumes in the namespace without a namespace-level policy are kept (plan-level
+              keepSource), and the migration plan remains available after cleanup
+        """
         verify_vm_storage_class_updated(
             vm=running_vm_for_scmig_test_first_ns, target_storage_class=target_storage_class
         )
@@ -212,7 +383,7 @@ class TestStorageMigrationCombinedRetentionPolicy:
             pytest.param(
                 {"spec_retention_policy": DELETE_SOURCE, "first_ns_override_retention_policy": KEEP_SOURCE},
                 id="spec_delete_ns_keep",
-            )
+            ),
         ],
         indirect=True,
     )
@@ -231,6 +402,26 @@ class TestStorageMigrationCombinedRetentionPolicy:
         source_dv_names_second_ns_for_scmig_test,
         combined_policy_and_combined_mode_mig_plan,
     ):
+        """
+        Verify namespace-level keepSource overrides plan-level deleteSource for that namespace.
+
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
+        STP Requirement: Combined namespace and plan-level cleanup policies (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume in first namespace
+            - Stopped VM (offline migration) with source PVC/DataVolume in second namespace
+
+        Steps:
+            - Execute the migration plan with plan-level retentionPolicy=deleteSource and
+              namespace-level retentionPolicy=keepSource for the first namespace
+
+        Expected:
+            - Source volumes in the namespace with keepSource are kept (namespace overrides
+              plan) while source volumes in the namespace without a namespace-level policy are
+              deleted (plan-level deleteSource), and the migration plan remains available after
+              cleanup
+        """
         verify_vm_storage_class_updated(
             vm=running_vm_for_scmig_test_first_ns, target_storage_class=target_storage_class
         )
@@ -253,7 +444,7 @@ class TestStorageMigrationCombinedRetentionPolicy:
             pytest.param(
                 {"spec_retention_policy": DELETE_SOURCE, "first_ns_override_retention_policy": DELETE_SOURCE},
                 id="both_delete",
-            )
+            ),
         ],
         indirect=True,
     )
@@ -268,12 +459,36 @@ class TestStorageMigrationCombinedRetentionPolicy:
         source_dv_names_second_ns_for_scmig_test,
         combined_policy_and_combined_mode_mig_plan,
     ):
-        for vm, source_dvs in (
-            (running_vm_for_scmig_test_first_ns, source_dv_names_first_ns_for_scmig_test),
-            (stopped_vm_for_scmig_test_second_ns, source_dv_names_second_ns_for_scmig_test),
-        ):
-            verify_vm_storage_class_updated(vm=vm, target_storage_class=target_storage_class)
-            verify_source_dvs_deleted(vm=vm, source_dv_names=source_dvs)
+        """
+        Verify namespace-level and plan-level deleteSource together delete all source volumes.
+
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
+        STP Requirement: Combined namespace and plan-level cleanup policies (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume in first namespace
+            - Stopped VM (offline migration) with source PVC/DataVolume in second namespace
+
+        Steps:
+            - Execute the migration plan with plan-level retentionPolicy=deleteSource and
+              namespace-level retentionPolicy=deleteSource for the first namespace
+
+        Expected:
+            - All source volumes are deleted and the migration plan remains available after
+              cleanup
+        """
+        verify_vm_storage_class_updated(
+            vm=running_vm_for_scmig_test_first_ns, target_storage_class=target_storage_class
+        )
+        verify_source_dvs_deleted(
+            vm=running_vm_for_scmig_test_first_ns, source_dv_names=source_dv_names_first_ns_for_scmig_test
+        )
+        verify_vm_storage_class_updated(
+            vm=stopped_vm_for_scmig_test_second_ns, target_storage_class=target_storage_class
+        )
+        verify_source_dvs_deleted(
+            vm=stopped_vm_for_scmig_test_second_ns, source_dv_names=source_dv_names_second_ns_for_scmig_test
+        )
         assert combined_policy_and_combined_mode_mig_plan.exists, (
             f"Migration plan {combined_policy_and_combined_mode_mig_plan.name} should still exist after cleanup"
         )
@@ -284,7 +499,7 @@ class TestStorageMigrationCombinedRetentionPolicy:
             pytest.param(
                 {"spec_retention_policy": KEEP_SOURCE, "first_ns_override_retention_policy": KEEP_SOURCE},
                 id="both_keep",
-            )
+            ),
         ],
         indirect=True,
     )
@@ -298,24 +513,62 @@ class TestStorageMigrationCombinedRetentionPolicy:
         source_dv_names_first_ns_for_scmig_test,
         source_dv_names_second_ns_for_scmig_test,
     ):
-        for vm, source_dvs in (
-            (running_vm_for_scmig_test_first_ns, source_dv_names_first_ns_for_scmig_test),
-            (stopped_vm_for_scmig_test_second_ns, source_dv_names_second_ns_for_scmig_test),
-        ):
-            verify_vm_storage_class_updated(vm=vm, target_storage_class=target_storage_class)
-            verify_source_dvs_exist(vm=vm, source_dv_names=source_dvs)
+        """
+        Verify namespace-level and plan-level keepSource together keep all source volumes.
+
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
+        STP Requirement: Combined namespace and plan-level cleanup policies (P0)
+
+        Preconditions:
+            - Running VM (online migration) with source PVC/DataVolume in first namespace
+            - Stopped VM (offline migration) with source PVC/DataVolume in second namespace
+
+        Steps:
+            - Execute the migration plan with plan-level retentionPolicy=keepSource and
+              namespace-level retentionPolicy=keepSource for the first namespace
+
+        Expected:
+            - All source volumes are kept
+        """
+        verify_vm_storage_class_updated(
+            vm=running_vm_for_scmig_test_first_ns, target_storage_class=target_storage_class
+        )
+        verify_source_dvs_exist(
+            vm=running_vm_for_scmig_test_first_ns, source_dv_names=source_dv_names_first_ns_for_scmig_test
+        )
+        verify_vm_storage_class_updated(
+            vm=stopped_vm_for_scmig_test_second_ns, target_storage_class=target_storage_class
+        )
+        verify_source_dvs_exist(
+            vm=stopped_vm_for_scmig_test_second_ns, source_dv_names=source_dv_names_second_ns_for_scmig_test
+        )
 
 
 @pytest.mark.parametrize(
     "source_storage_class",
-    [pytest.param({"source_storage_class": py_config[STORAGE_CLASS_A]}, id="source_a")],
+    [
+        pytest.param(
+            {"source_storage_class": py_config[STORAGE_CLASS_A]},
+            id="source_a",
+        ),
+    ],
     indirect=True,
 )
 class TestStorageMigrationFailureRetentionPolicy:
-    """[NEGATIVE] Test retention behavior when migration fails."""
+    """
+    [NEGATIVE] Test retentionPolicy behavior when migration fails.
+    Source volumes should be retained regardless of retentionPolicy setting.
+
+    STP Traceability: CNV-73509 (P2)
+
+    Preconditions:
+      - VM with source PVC/DataVolume
+    """
 
     @pytest.mark.parametrize(
-        "failure_mig_plan", [pytest.param({"retention_policy": DELETE_SOURCE}, id="delete_source")], indirect=True
+        "failure_mig_plan",
+        [pytest.param({"retention_policy": DELETE_SOURCE}, id="delete_source")],
+        indirect=True,
     )
     @pytest.mark.xfail(
         reason=f"{QUARANTINED}: Not clarified Failing migration cases, wait for product clarification, CNV-98407",
@@ -323,11 +576,33 @@ class TestStorageMigrationFailureRetentionPolicy:
     )
     @pytest.mark.polarion("CNV-16309")
     @pytest.mark.usefixtures("failure_mig_migration")
-    def test_failed_migration_with_delete_source_policy(self, failure_test_vm, failure_source_dv_names):
+    def test_failed_migration_with_delete_source_policy(
+        self,
+        failure_test_vm,
+        failure_source_dv_names,
+    ):
+        """
+        [NEGATIVE] Verify source volumes are retained when migration fails with retentionPolicy=deleteSource.
+
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
+        STP Requirement: Source volumes preserved on migration failure (P2)
+
+        Preconditions:
+            - VM with source PVC/DataVolume
+
+        Steps:
+            - Execute a migration plan with plan-level retentionPolicy=deleteSource and an
+              invalid target storage class, then wait for the migration to fail
+
+        Expected:
+            - Source volumes are retained despite the deleteSource policy
+        """
         verify_source_dvs_exist(vm=failure_test_vm, source_dv_names=failure_source_dv_names)
 
     @pytest.mark.parametrize(
-        "failure_mig_plan", [pytest.param({"retention_policy": KEEP_SOURCE}, id="keep_source")], indirect=True
+        "failure_mig_plan",
+        [pytest.param({"retention_policy": KEEP_SOURCE}, id="keep_source")],
+        indirect=True,
     )
     @pytest.mark.xfail(
         reason=f"{QUARANTINED}: Not clarified Failing migration cases, wait for product clarification, CNV-98407",
@@ -335,5 +610,25 @@ class TestStorageMigrationFailureRetentionPolicy:
     )
     @pytest.mark.polarion("CNV-16310")
     @pytest.mark.usefixtures("failure_mig_migration")
-    def test_failed_migration_with_keep_source_policy(self, failure_test_vm, failure_source_dv_names):
+    def test_failed_migration_with_keep_source_policy(
+        self,
+        failure_test_vm,
+        failure_source_dv_names,
+    ):
+        """
+        [NEGATIVE] Verify source volumes are retained when migration fails with retentionPolicy=keepSource.
+
+        STP: https://github.com/RedHatQE/openshift-virtualization-tests-design-docs/blob/main/stps/sig-storage/storage_mig_cleanup.md
+        STP Requirement: Source volumes preserved on migration failure (P2)
+
+        Preconditions:
+            - VM with source PVC/DataVolume
+
+        Steps:
+            - Execute a migration plan with plan-level retentionPolicy=keepSource and an
+              invalid target storage class, then wait for the migration to fail
+
+        Expected:
+            - Source volumes are retained
+        """
         verify_source_dvs_exist(vm=failure_test_vm, source_dv_names=failure_source_dv_names)
