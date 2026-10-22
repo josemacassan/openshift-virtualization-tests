@@ -537,6 +537,14 @@ def combined_mode_mig_migration(
 
 @pytest.fixture()
 def second_vm_namespace(admin_client, unprivileged_client, unique_suffix_scope_function):
+    """Create a second, function-scoped namespace for storage migration cleanup tests.
+
+    Yields:
+        Namespace: The created namespace object, named uniquely per test function.
+
+    Side effects:
+        Creates the namespace on cluster setup and deletes it on teardown.
+    """
     yield from create_ns(
         admin_client=admin_client,
         unprivileged_client=unprivileged_client,
