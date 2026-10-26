@@ -271,8 +271,6 @@ def vms_boot_time_before_storage_migration(online_vms_for_storage_class_migratio
 
 @pytest.fixture(scope="class")
 def deleted_old_dvs_of_online_vms(unprivileged_client, storage_mig_migration, online_vms_for_storage_class_migration):
-    # Wait for the storage migration to complete before reading the migrated source PVC name.
-    wait_for_storage_migration_phase(mig_migration=storage_mig_migration)
     for vm in online_vms_for_storage_class_migration:
         dv_name = vm.instance.status.volumeUpdateState.volumeMigrationState.migratedVolumes[0].sourcePVCInfo.claimName
         dv = DataVolume(client=unprivileged_client, name=dv_name, namespace=vm.namespace, ensure_exists=True)
@@ -531,11 +529,11 @@ def combined_mode_mig_migration(
 
 
 @pytest.fixture()
-def second_vm_namespace(admin_client, unprivileged_client, unique_suffix):
+def second_vm_namespace(admin_client, unprivileged_client, unique_suffix_scope_function):
     yield from create_ns(
         admin_client=admin_client,
         unprivileged_client=unprivileged_client,
-        name=f"test-scmig-cleanup-second-ns-{unique_suffix}",
+        name=f"test-scmig-cleanup-second-ns-{unique_suffix_scope_function}",
     )
 
 
